@@ -23,7 +23,7 @@
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
         
         /* Custom pulse for the timer circle */
         @keyframes pulse-ring {
@@ -42,21 +42,41 @@
             animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
 
-        /* Responsive height for the main container */
-        .h-screen-responsive {
-            min-height: 100vh;
+        /* Confetti Animation */
+        @keyframes confetti-fall {
+            0% { 
+                transform: translateY(-100vh) rotate(0deg); 
+                opacity: 1; 
+            }
+            100% { 
+                transform: translateY(100vh) rotate(720deg); 
+                opacity: 0; 
+            }
+        }
+
+        .confetti {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            opacity: 0;
+            animation: confetti-fall linear infinite;
+            z-index: 1000;
         }
     </style>
 </head>
-<body class="bg-dark-bg font-sans text-light-text h-screen-responsive flex items-center justify-center p-4">
+<body class="bg-dark-bg font-sans text-light-text h-screen flex items-center justify-center p-4 overflow-hidden">
+    
+    <!-- Confetti Container (Fixed and hidden by default) -->
+    <div id="confetti-container" class="fixed inset-0 pointer-events-none z-50 overflow-hidden"></div>
 
     <div id="app" class="w-full max-w-lg bg-gray-700 p-6 sm:p-8 rounded-xl shadow-2xl transition-all duration-300">
         <h1 class="text-3xl font-bold text-center text-primary mb-2">York Breathing Exercise Timer</h1>
-        <p class="text-center text-sm text-gray-400 mb-6">for use with the EMST 75/150 Trainer</p>
+        <p class="text-center text-sm text-gray-400 mb-6">for use with an EMST 75/150 Trainer</p>
         
         <!-- Rest Duration Selector -->
-        <div id="duration-selector-box" class="mb-6 p-4 bg-gray-800 rounded-lg text-sm text-gray-300 border-l-4 border-gray-600">
-            <label class="block text-md font-semibold text-gray-100 mb-2">Rest Phase Duration:</label>
+        <div class="mb-6 p-4 bg-gray-800 rounded-lg text-sm text-gray-300 border-l-4 border-gray-600">
+            <label class="block text-md font-semibold text-gray-100 mb-2">Select Rest Phase Duration:</label>
             <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-6">
                 <label class="flex items-center space-x-2 cursor-pointer transition-colors duration-150 hover:text-primary">
                     <input type="radio" name="rest-duration" value="15" checked 
@@ -73,17 +93,9 @@
             </div>
         </div>
 
-
-        <!-- Instructions / Message Box -->
-        <div id="message-box" class="mb-6 p-4 bg-gray-800 rounded-lg text-sm text-gray-300 border-l-4 border-primary">
-            Press 'Start Session' to begin. Focus on inhaling deeply and exhaling forcefully against the device's resistance.
-        </div>
-
-        <!-- Status Display -->
+        <!-- Status Display (Handles all messages and instructions) -->
         <div class="text-center mb-8">
-            <div id="status-text" class="text-3xl font-extrabold mb-2 h-8 text-white">READY</div>
-            <!-- HIDDEN: Rep/Trial text counter. Visual status is now provided by the Set Progress Boxes -->
-            <div id="rep-counter" class="text-lg font-medium text-gray-300 hidden">Current Rep: 0 | Current Trial: 0</div>
+            <div id="status-text" class="text-3xl font-extrabold mb-2 h-14 text-white flex items-center justify-center transition-colors duration-300">Ready</div>
         </div>
 
         <!-- Timer & Controls Wrapper (New Responsive Block) -->
@@ -189,6 +201,12 @@
             </div>
         </div>
         
+        <!-- Total Time Remaining Display -->
+        <div class="mt-4 text-center text-sm font-medium text-gray-400">
+            <span id="total-time-label">Time Remaining:</span>
+            <span id="total-time-value" class="ml-2 text-white font-bold">00:00</span>
+        </div>
+        
     </div>
 
     <!-- Confirmation Modal HTML -->
@@ -233,50 +251,59 @@
         const TIMER_STATE = {
             IDLE: 'IDLE',
             PAUSED: 'PAUSED',
-            INHALE: 'INHALE', // Prepare/Inhale deeply (1s)
-            EXHALE: 'EXHALE', // Exhale forcefully against EMST 150 (1s)
-            REST: 'REST',     // Short recovery
-            LONG_BREAK: 'LONG_BREAK', // Long recovery (60s)
+            ACTIVE_REP: 'ACTIVE_REP', // Full 15s or 30s cycle countdown
+            LONG_BREAK: 'LONG_BREAK', // 60s break
         };
+        
+        // Sub-phase definitions for internal tick logic and status updates
+        const SUB_PHASE = {
+            INHALE: 'Inhale Deeply',
+            EXHALE: 'Exhale Forcefully',
+            REST: 'Rest & Recover',
+        };
+        
+        // Constants for Total Session Time calculation
+        const TOTAL_REPS = 25; // 5 Sets * 5 Reps
+        const NUM_LONG_BREAKS = 4; // Breaks after Sets 1, 2, 3, 4
+        const LONG_BREAK_DURATION_MS = 60000; // 1 minute
 
+        // Instructional messages
+        const INITIAL_INSTRUCTIONS = "Press 'Start Session' to begin. Focus on Inhaling Deeply and Exhaling Forcefully against the device's resistance.";
+        const EXHALE_INSTRUCTIONS = 'Exhale Forcefully (< 2 seconds)'; 
+        const PAUSE_INSTRUCTIONS = "Session Paused. Click 'Resume Session' to Continue.";
+
+
+        // Durations are now only for the full active rep and the long break
         const PHASE_DURATIONS_MS = {
-            [TIMER_STATE.INHALE]: 1000, 
-            [TIMER_STATE.EXHALE]: 1000, 
-            [TIMER_STATE.REST]: 13000,  // Default: 13000 ms (15s label)
+            [TIMER_STATE.ACTIVE_REP]: 15000,  // Default: 15 seconds total (1s Inhale + 2s Exhale + 12s Rest)
             [TIMER_STATE.LONG_BREAK]: 60000 // 60 seconds (1 minute)
         };
+        // Internal variables to track dynamic settings
+        let currentRepDurationMs = 15000;
+        let currentRestLabel = 'Rest & Recover'; // Simplified label
+        let totalSessionDurationMs = 0; // Calculated on start/duration change
 
-        const PHASE_TEXT = {
-            [TIMER_STATE.INHALE]: 'Inhale Deeply', 
-            [TIMER_STATE.EXHALE]: 'Exhale Forcefully', // Main Status Label (Clean)
-            [TIMER_STATE.REST]: 'Rest & Recover (15s)', // Default label
-            [TIMER_STATE.LONG_BREAK]: '1 Minute Break', // Changed to Title Case
-            [TIMER_STATE.PAUSED]: 'Paused', // Changed to Title Case
-        };
-
-        const EXHALE_MESSAGE = 'Exhale Forcefully (shorter than 2 seconds)'; // Detailed Message Box Content
 
         const PHASE_COLOR_CLASS = {
-            [TIMER_STATE.INHALE]: 'text-cyan-400',
-            [TIMER_STATE.EXHALE]: 'text-red-500',
-            [TIMER_STATE.REST]: 'text-green-400',
+            [SUB_PHASE.INHALE]: 'text-cyan-400',
+            [SUB_PHASE.EXHALE]: 'text-red-500',
+            [SUB_PHASE.REST]: 'text-green-400',
             [TIMER_STATE.LONG_BREAK]: 'text-yellow-400',
             [TIMER_STATE.PAUSED]: 'text-yellow-500',
+            [TIMER_STATE.IDLE]: 'text-white'
         };
+        
+        const CONFETTI_COLORS = ['#f9fafb', '#10b981', '#f59e0b', '#ef4444', '#3b82f6']; // White, Emerald, Amber, Red, Blue
 
         let currentState = TIMER_STATE.IDLE;
         let animationFrameId = null;
         let repCount = 0; // Total reps completed since session start (Max 25)
         let phaseStartTime = 0;
+        let sessionStartTime = 0; // Tracks the start of the entire session
         let timeRemainingWhenPaused = 0;
-
-        // Tracks reps completed for each of the 5 Sets: [S1_Reps, S2_Reps, S3_Reps, S4_Reps, S5_Reps]
         let setProgress = [0, 0, 0, 0, 0]; 
-
-        // Variable to hold the state before pausing 
-        let activeStateBeforePause = TIMER_STATE.INHALE;
-        
-        // Variable to track if the session was running before the modal opened
+        // activeStateBeforePause will hold ACTIVE_REP or LONG_BREAK
+        let activeStateBeforePause = TIMER_STATE.ACTIVE_REP; 
         let wasRunningBeforeModal = false;
 
 
@@ -287,62 +314,130 @@
         const resetButton = document.getElementById('reset-button');
         const statusText = document.getElementById('status-text');
         const timerValue = document.getElementById('timer-value');
-        const repCounter = document.getElementById('rep-counter'); // Hidden element
         const pulseRing = document.getElementById('pulse-ring');
         const timerContainer = document.getElementById('timer-display-container').querySelector('.relative.flex.flex-col');
-        const messageBox = document.getElementById('message-box');
         const setBoxes = document.querySelectorAll('.set-box');
-        const durationSelectorBox = document.getElementById('duration-selector-box'); // Added this
+        const totalTimeValue = document.getElementById('total-time-value');
+        const confettiContainer = document.getElementById('confetti-container');
+
+
         // MODAL ELEMENTS
         const resetModal = document.getElementById('reset-modal');
         const confirmResetButton = document.getElementById('confirm-reset');
         const cancelResetButton = document.getElementById('cancel-reset');
         
-        // Audio Context (for beeps/chimes)
         let audioContext;
+        
+        // --- Helper Functions ---
+        
+        /** Formats milliseconds into M:SS string. */
+        const formatTime = (ms) => {
+            if (ms <= 0) return '00:00';
+            
+            const totalSeconds = Math.ceil(ms / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            
+            const pad = (num) => num.toString().padStart(2, '0');
+            
+            return `${pad(minutes)}:${pad(seconds)}`;
+        };
+
+        /** Calculates the total session duration based on current rep duration setting. */
+        const calculateTotalDuration = (repDurationMs) => {
+            // Total Duration = (25 Reps * Rep Duration) + (4 Breaks * 1 Min)
+            // Note: The last set does not have a break.
+            totalSessionDurationMs = (TOTAL_REPS * repDurationMs) + (NUM_LONG_BREAKS * LONG_BREAK_DURATION_MS);
+        };
+        
+        /** Generates and animates a burst of confetti. */
+        const showCelebration = () => {
+            // Clear existing confetti
+            confettiContainer.innerHTML = '';
+            
+            // Generate 50 particles
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                
+                // Random position, color, size, and delay
+                confetti.style.left = `${Math.random() * 100}vw`;
+                confetti.style.backgroundColor = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+                confetti.style.width = `${Math.random() * 5 + 5}px`;
+                confetti.style.height = confetti.style.width;
+                confetti.style.animationDuration = `${Math.random() * 3 + 4}s`; // 4s to 7s duration
+                confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+                confetti.style.opacity = 1;
+                
+                confettiContainer.appendChild(confetti);
+            }
+            
+            // Hide and clear confetti after the animation duration (e.g., 7 seconds max)
+            setTimeout(() => {
+                confettiContainer.innerHTML = '';
+            }, 7000);
+        };
+
+
+        /** Sets the content and adjusts the font size of the main status display. */
+        const setStatusText = (text, phase) => {
+            statusText.innerHTML = text;
+            
+            // Determine color class: use phase color if available, otherwise default to white
+            const colorClass = PHASE_COLOR_CLASS[phase] || PHASE_COLOR_CLASS[TIMER_STATE.IDLE];
+            statusText.className = `font-extrabold mb-2 h-14 flex items-center justify-center transition-colors duration-300 ${colorClass}`; 
+
+            // Adjust font size based on content length or line breaks
+            if (text.length > 30 || text.includes('<br>')) {
+                // For long messages/instructions/breaks
+                statusText.classList.add('text-xl', 'font-semibold'); 
+                statusText.classList.remove('text-3xl'); 
+            } else {
+                // For short phase names (e.g., Inhale Deeply, Paused, Ready)
+                statusText.classList.add('text-3xl'); 
+                statusText.classList.remove('text-xl', 'font-semibold'); 
+            }
+        };
 
         // --- Modal Functions ---
-        /** Shows the reset confirmation modal. */
         const openResetModal = () => {
             resetModal.classList.remove('hidden');
             resetModal.classList.add('flex');
         };
 
-        /** Hides the reset confirmation modal. */
         const closeResetModal = () => {
             resetModal.classList.add('hidden');
             resetModal.classList.remove('flex');
         };
 
         // --- Duration Handler Function ---
-        /**
-         * Updates the REST phase duration and label based on user selection.
-         * If the session is active, it forces a reset to apply changes safely.
-         * @param {string} value - '15' or '30'
-         */
         window.handleRestDurationChange = (value) => {
             let newDurationMs;
             let newLabel;
 
             if (value === '30') {
-                // 30s label = 28s actual duration (30s - 2s from Inhale/Exhale cycles)
-                newDurationMs = 28000;
-                newLabel = 'Rest & Recover (30s)';
+                newDurationMs = 30000; // 1s Inhale + 2s Exhale + 27s Rest = 30s
+                newLabel = 'Rest & Recover'; // Simplified label
             } else {
-                // 15s label = 13s actual duration (15s - 2s from Inhale/Exhale cycles)
-                newDurationMs = 13000;
-                newLabel = 'Rest & Recover (15s)';
+                newDurationMs = 15000; // 1s Inhale + 2s Exhale + 12s Rest = 15s
+                newLabel = 'Rest & Recover'; // Simplified label
             }
 
             // Check if session is running and force reset
             if (currentState !== TIMER_STATE.IDLE) {
                 resetSession(false);
-                messageBox.textContent = `Duration changed to ${newLabel}. Session was reset. Press 'Start Session' to begin.`;
+                setStatusText(`Duration Changed. Session Was Reset. Press 'Start Session' to Begin.`, TIMER_STATE.IDLE);
             }
 
-            // Update constants globally
-            PHASE_DURATIONS_MS[TIMER_STATE.REST] = newDurationMs;
-            PHASE_TEXT[TIMER_STATE.REST] = newLabel;
+            // Update internal variables and constants globally
+            currentRepDurationMs = newDurationMs;
+            currentRestLabel = newLabel;
+            PHASE_DURATIONS_MS[TIMER_STATE.ACTIVE_REP] = currentRepDurationMs;
+            
+            // Recalculate total session duration
+            calculateTotalDuration(currentRepDurationMs);
+            // Update total time display with new total duration
+            totalTimeValue.textContent = formatTime(totalSessionDurationMs);
         };
         
         /** Initializes the Web Audio API context. */
@@ -358,12 +453,6 @@
 
 
         // --- Audio Functions ---
-
-        /**
-         * Plays a simple tone.
-         * @param {number} frequency - The frequency of the tone (Hz).
-         * @param {number} duration - The duration of the tone (seconds).
-         */
         const playTone = (frequency, duration) => {
             if (!audioContext) return;
             
@@ -383,16 +472,19 @@
             oscillator.stop(audioContext.currentTime + duration);
         };
         
-        /** Plays a chime sound for phase transition. */
-        const playTransitionChime = () => {
-             // Low-pitch beep for preparation/end of rest
-            if (currentState === TIMER_STATE.INHALE || currentState === TIMER_STATE.REST || currentState === TIMER_STATE.LONG_BREAK) {
-                playTone(440, 0.1);
-            }
-            // High-pitch beep for the main exhale action
-            if (currentState === TIMER_STATE.EXHALE) {
-                playTone(880, 0.2);
-            }
+        // This function now uses the subPhase state passed to it
+        let lastPlayedSubPhase = null;
+        const playTransitionChime = (subPhase) => {
+             // Only play chime when transitioning into a new subPhase
+             if (lastPlayedSubPhase === subPhase) return;
+             
+             if (subPhase === SUB_PHASE.INHALE || subPhase === SUB_PHASE.REST) {
+                playTone(440, 0.1); // Low-pitch chime for prep/rest
+             }
+             if (subPhase === SUB_PHASE.EXHALE) {
+                playTone(880, 0.2); // High-pitch beep for action
+             }
+             lastPlayedSubPhase = subPhase;
         };
         
         /** Updates the visual progress boxes (Set 1-5) based on current setProgress array. */
@@ -400,27 +492,20 @@
             setProgress.forEach((reps, index) => {
                 const box = setBoxes[index];
                 const counterElement = box.querySelector('.set-rep-counter');
-                const checkmarkElement = box.querySelector('.checkmark-container'); // Get the checkmark
+                const checkmarkElement = box.querySelector('.checkmark-container');
                 
-                // Update counter text
                 counterElement.textContent = reps;
-
-                // Reset color classes
                 box.classList.remove('bg-gray-500', 'bg-gray-900', 'bg-green-500');
 
-                // Apply color logic and checkmark visibility
                 if (reps === 0) {
-                    // Initial state
                     box.classList.add('bg-gray-500'); 
-                    checkmarkElement.classList.add('hidden'); // Hide checkmark
+                    checkmarkElement.classList.add('hidden');
                 } else if (reps >= 1 && reps <= 4) {
-                    // Reps started (1 to 4) -> Black
                     box.classList.add('bg-gray-900'); 
-                    checkmarkElement.classList.add('hidden'); // Hide checkmark
+                    checkmarkElement.classList.add('hidden');
                 } else if (reps === 5) {
-                    // Set Complete (5 reps) -> Green
                     box.classList.add('bg-green-500'); 
-                    checkmarkElement.classList.remove('hidden'); // Show checkmark
+                    checkmarkElement.classList.remove('hidden');
                 }
             });
         };
@@ -428,20 +513,13 @@
 
         // --- Timer Logic ---
 
-        /** Updates the UI with current phase data. */
+        /** Updates the UI for the timer value and pulse ring. */
         const updateUI = (phase, remainingTimeS) => {
-            // Only update UI if not paused, or if it's the pause state itself
-            if (currentState !== TIMER_STATE.PAUSED) {
-                // Update text and color
-                statusText.textContent = PHASE_TEXT[phase];
-                statusText.className = `text-3xl font-extrabold mb-2 h-8 ${PHASE_COLOR_CLASS[phase]}`;
-            }
-
             // Update timer value (formatted to show only whole seconds)
             timerValue.textContent = Math.ceil(remainingTimeS).toString();
 
             // Update pulse ring and shadow
-            const isCriticalPhase = (phase === TIMER_STATE.EXHALE || phase === TIMER_STATE.INHALE);
+            const isCriticalPhase = (phase === SUB_PHASE.EXHALE || phase === SUB_PHASE.INHALE);
             if (isCriticalPhase) {
                 pulseRing.classList.remove('hidden');
                 pulseRing.classList.add('timer-ring-active');
@@ -453,28 +531,9 @@
                 timerContainer.classList.remove('border-primary');
                 timerValue.classList.remove('text-primary');
             }
-            
-            // Update Rep Counter (NOTE: This div is hidden)
-            const currentSet = Math.ceil(repCount / 5);
-            const currentRepInSet = (repCount % 5) || 5;
-
-            if (repCount === 0) {
-                 repCounter.textContent = 'Current Rep: 0 | Current Set: 0';
-            } else if (phase === TIMER_STATE.LONG_BREAK) {
-                // Display Set Complete message during the break
-                repCounter.textContent = `Current Rep: 5 of 5 | Current Set: ${currentSet} (Break)`;
-            } else if (repCount < 25) {
-                // Display Current Rep/Set count during active phases
-                repCounter.textContent = `Current Rep: ${currentRepInSet} of 5 | Current Set: ${currentSet}`;
-            } else {
-                 // Final set is running
-                 repCounter.textContent = `Current Rep: ${currentRepInSet} of 5 | Current Set: 5`;
-            }
         };
 
-        /** Stops and resets the timer session. 
-         * @param {boolean} isCompleted - True if the session finished successfully (5 Sets).
-         */
+        /** Stops and resets the timer session. */
         const resetSession = (isCompleted = false) => {
             if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
@@ -484,52 +543,44 @@
             currentState = TIMER_STATE.IDLE;
             repCount = 0;
             timeRemainingWhenPaused = 0;
-            setProgress = [0, 0, 0, 0, 0]; // Reset set progress tracker
+            setProgress = [0, 0, 0, 0, 0];
+            lastPlayedSubPhase = null; // Reset audio tracker
+            sessionStartTime = 0; // Reset session start time
             
             // UI reset
             startButton.classList.remove('hidden');
             activeControls.classList.add('hidden');
-            durationSelectorBox.classList.remove('hidden'); // Show selector box
 
             if (isCompleted) {
-                // Modified to use innerHTML with line break and Title Case
-                statusText.innerHTML = 'Session<br>Complete!'; 
-                messageBox.textContent = "Congratulations! You successfully completed 5 full 5-breath sets."; 
+                // SESSION COMPLETE message (two lines, large font)
+                setStatusText('Session<br>Complete!', TIMER_STATE.IDLE);
+                showCelebration(); // <-- Show confetti for celebration!
             } else {
-                // Changed to Title Case
-                statusText.textContent = 'Session Ended';
-                messageBox.textContent = "Session stopped. Press 'Start Session' to begin a new exercise.";
+                // Reset message or Initial Instructions
+                setStatusText(INITIAL_INSTRUCTIONS, TIMER_STATE.IDLE);
             }
             
-            // Ensure messageBox uses textContent after reset
-            messageBox.innerHTML = messageBox.textContent;
-            
-            // Note: statusText is now potentially using innerHTML, but the class name logic remains correct
-            statusText.className = `text-3xl font-extrabold mb-2 h-8 text-white`;
             timerValue.textContent = '0';
-            messageBox.classList.remove('border-secondary');
-            messageBox.classList.add('border-primary');
             pulseRing.classList.add('hidden');
             pulseRing.classList.remove('timer-ring-active');
             timerContainer.classList.remove('border-primary');
             timerValue.classList.remove('text-primary');
+            
+            // Update total time display to show initial duration
+            totalTimeValue.textContent = formatTime(totalSessionDurationMs);
 
-            updateUI(TIMER_STATE.IDLE, 0); // Resets rep counter display
             updateSetBoxes(); // Resets set boxes visually
         };
 
-        /** Transitions the state machine to the next phase. */
+        /** Transitions the state machine to the next major phase. */
         const nextState = () => {
             let nextPhase;
 
+            // This only handles transitions between major phases (Rep Cycle, Long Break, End)
             switch (currentState) {
-                case TIMER_STATE.INHALE:
-                    nextPhase = TIMER_STATE.EXHALE;
-                    break;
-                case TIMER_STATE.EXHALE:
+                case TIMER_STATE.ACTIVE_REP:
                     repCount++; 
                     
-                    // Update set progress tracker after a successful rep
                     const currentSetIndex = Math.floor((repCount - 1) / 5); 
                     const currentRepInSet = (repCount % 5) || 5;
                     
@@ -538,26 +589,25 @@
                         updateSetBoxes();
                     }
 
-                    if (repCount % 5 === 0) {
-                        nextPhase = TIMER_STATE.LONG_BREAK;
-                    } else {
-                        nextPhase = TIMER_STATE.REST;
-                    }
-                    break;
-                case TIMER_STATE.REST:
-                    nextPhase = TIMER_STATE.INHALE;
-                    break;
-                case TIMER_STATE.LONG_BREAK:
-                    // Check for session completion (5 sets * 5 reps = 25 total reps)
+                    // *** MODIFIED LOGIC HERE ***
                     if (repCount >= 25) { 
+                        // If the final rep (rep 25) is complete, end the session immediately.
                         resetSession(true); 
                         return;
+                    } else if (repCount % 5 === 0) {
+                        // If a set (1-4) is complete, go to the long break.
+                        nextPhase = TIMER_STATE.LONG_BREAK;
+                    } else {
+                        // Normal rep cycle, repeat ACTIVE_REP (which handles the rest period internally).
+                        nextPhase = TIMER_STATE.ACTIVE_REP;
                     }
-                    nextPhase = TIMER_STATE.INHALE;
                     break;
-                case TIMER_STATE.IDLE: // Start from INHALE
-                    nextPhase = TIMER_STATE.INHALE;
-                    // Rep count is updated when transitioning from EXHALE, not IDLE
+                case TIMER_STATE.LONG_BREAK:
+                    // This case is only reached after Sets 1-4.
+                    nextPhase = TIMER_STATE.ACTIVE_REP;
+                    break;
+                case TIMER_STATE.IDLE: // Start from ACTIVE_REP
+                    nextPhase = TIMER_STATE.ACTIVE_REP;
                     break;
                 default:
                     resetSession();
@@ -566,25 +616,49 @@
 
             currentState = nextPhase;
             phaseStartTime = Date.now();
-            playTransitionChime();
-            // Use the currently configured duration for the next state
-            updateUI(currentState, PHASE_DURATIONS_MS[currentState] / 1000); 
+            lastPlayedSubPhase = null; // Ensure audio chime plays immediately in the next phase
             
-            // Dynamic Message Setting based on the new currentState
+            // Set Status Text immediately for the new major phase
             if (currentState === TIMER_STATE.LONG_BREAK) {
-                // RepCount was just incremented to a multiple of 5 (5, 10, 15, 20, 25)
                 const completedSet = repCount / 5; 
-                // Changed to Title Case
-                messageBox.innerHTML = `1 Minute Break<br><span class="font-bold">(Set ${completedSet} Complete)</span>`; 
-            } else if (currentState === TIMER_STATE.EXHALE) {
-                // Set the specific instructional text for the Exhale message box
-                messageBox.textContent = EXHALE_MESSAGE;
+                const breakMessage = `1 Minute Break<br><span class="text-xl font-normal">(Set ${completedSet} Complete)</span>`; 
+                setStatusText(breakMessage, currentState);
             } 
-            else {
-                // Use textContent for all other phases (INHALE, REST, PAUSED)
-                messageBox.textContent = PHASE_TEXT[currentState];
-            }
+            
+            // Start time remaining update
+            updateUI(currentState, PHASE_DURATIONS_MS[currentState] / 1000); 
         };
+
+        /** Updates the status bar dynamically during the ACTIVE_REP phase. */
+        const updateActiveRepStatus = (elapsedMs) => {
+            let subPhase;
+            
+            if (elapsedMs < 1000) {
+                subPhase = SUB_PHASE.INHALE;
+            } else if (elapsedMs < 3000) { // EXHALE now runs for 2 seconds (from 1000ms to 3000ms)
+                subPhase = SUB_PHASE.EXHALE;
+            } else {
+                subPhase = SUB_PHASE.REST;
+            }
+            
+            playTransitionChime(subPhase);
+
+            // Determine display text based on subPhase
+            let displayText;
+            if (subPhase === SUB_PHASE.EXHALE) {
+                // Use detailed instruction for exhale
+                displayText = EXHALE_INSTRUCTIONS;
+            } else if (subPhase === SUB_PHASE.REST) {
+                // Use dynamic rest label
+                displayText = currentRestLabel;
+            } else {
+                // Use short label for inhale
+                displayText = SUB_PHASE.INHALE;
+            }
+
+            setStatusText(displayText, subPhase);
+        };
+
 
         /** The main animation loop (called by requestAnimationFrame). */
         const tick = () => {
@@ -592,9 +666,8 @@
 
             const now = Date.now();
             const elapsed = now - phaseStartTime;
-            // IMPORTANT: Use the current value from the dynamic configuration
-            const duration = PHASE_DURATIONS_MS[currentState];
             
+            const duration = PHASE_DURATIONS_MS[currentState];
             let remaining = duration - elapsed;
             
             if (remaining <= 0) {
@@ -602,7 +675,19 @@
             } else {
                 const remainingSeconds = remaining / 1000;
                 updateUI(currentState, remainingSeconds);
+
+                // Handle status updates within the ACTIVE_REP state
+                if (currentState === TIMER_STATE.ACTIVE_REP) {
+                    updateActiveRepStatus(elapsed);
+                }
             }
+
+            // --- Total Session Time Remaining Logic ---
+            const totalElapsed = now - sessionStartTime;
+            let totalRemaining = totalSessionDurationMs - totalElapsed;
+            
+            if (totalRemaining < 0) totalRemaining = 0;
+            totalTimeValue.textContent = formatTime(totalRemaining);
 
             animationFrameId = requestAnimationFrame(tick);
         };
@@ -616,15 +701,15 @@
             // UI setup
             startButton.classList.add('hidden');
             activeControls.classList.remove('hidden');
-            durationSelectorBox.classList.add('hidden'); // Hide selector box
             pauseResumeButton.textContent = 'Pause Session';
             pauseResumeButton.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
             pauseResumeButton.classList.add('bg-red-600', 'hover:bg-red-700');
-            messageBox.classList.remove('border-primary');
-            messageBox.classList.add('border-secondary');
 
+            // Set session start time
+            sessionStartTime = Date.now(); 
+            
             // Start state machine
-            nextState(); // Immediately jump to INHALE state (Rep 1)
+            nextState(); 
             
             // Start the loop
             animationFrameId = requestAnimationFrame(tick);
@@ -637,62 +722,60 @@
                 animationFrameId = null;
             }
             
-            // Calculate remaining time
             const elapsedSincePhaseStart = Date.now() - phaseStartTime;
-            // IMPORTANT: Use the current value from the dynamic configuration
             const duration = PHASE_DURATIONS_MS[currentState];
             timeRemainingWhenPaused = duration - elapsedSincePhaseStart;
             
-            // Store the state that was active before pause
             activeStateBeforePause = currentState; 
             currentState = TIMER_STATE.PAUSED;
+            lastPlayedSubPhase = null; // Reset audio tracker
 
             // UI update for pause
             pauseResumeButton.textContent = 'Resume Session';
             pauseResumeButton.classList.remove('bg-red-600', 'hover:bg-red-700');
             pauseResumeButton.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
-            // Changed to Title Case
-            statusText.textContent = 'Paused';
-            statusText.className = `text-3xl font-extrabold mb-2 h-8 ${PHASE_COLOR_CLASS[TIMER_STATE.PAUSED]}`;
-            messageBox.textContent = "Session paused. Click 'Resume Session' to continue.";
             
-            // Display the time remaining when paused
+            // Display pause instruction text
+            setStatusText(PAUSE_INSTRUCTIONS, TIMER_STATE.PAUSED);
+            
+            // Display the time remaining when paused (current phase)
             updateUI(currentState, timeRemainingWhenPaused / 1000);
+            
+            // Update total time display for pause state
+            const totalElapsed = Date.now() - sessionStartTime;
+            let totalRemaining = totalSessionDurationMs - totalElapsed;
+            if (totalRemaining < 0) totalRemaining = 0;
+            totalTimeValue.textContent = formatTime(totalRemaining);
         };
 
         /** Resumes the timer. */
         const resumeTimer = () => {
-            // Restore the state that was active before pause
             currentState = activeStateBeforePause; 
 
-            // IMPORTANT: Use the current value from the dynamic configuration
             const duration = PHASE_DURATIONS_MS[currentState];
             
-            // Calculate when the phase *should have started* given the remaining time
             phaseStartTime = Date.now() - (duration - timeRemainingWhenPaused); 
-            timeRemainingWhenPaused = 0; // Reset stored time
+            timeRemainingWhenPaused = 0; 
 
             // UI update for resume
             pauseResumeButton.textContent = 'Pause Session';
             pauseResumeButton.classList.add('bg-red-600', 'hover:bg-red-700');
             pauseResumeButton.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
             
+            // Recalculate and set the status text immediately
+            if (currentState === TIMER_STATE.LONG_BREAK) {
+                 const completedSet = repCount / 5; 
+                 const breakMessage = `1 Minute Break<br><span class="text-xl font-normal">(Set ${completedSet} Complete)</span>`; 
+                 setStatusText(breakMessage, currentState);
+            } else if (currentState === TIMER_STATE.ACTIVE_REP) {
+                 // Calculate elapsed time since phase start to determine the sub-phase
+                 const elapsed = Date.now() - phaseStartTime;
+                 updateActiveRepStatus(elapsed);
+            }
+
             // Restart the loop
             animationFrameId = requestAnimationFrame(tick);
             
-            // Update message box to current phase text, handling the two-line break dynamically
-            if (currentState === TIMER_STATE.LONG_BREAK) {
-                 const completedSet = repCount / 5; 
-                 // Changed to Title Case
-                 messageBox.innerHTML = `1 Minute Break<br><span class="font-bold">(Set ${completedSet} Complete)</span>`; 
-            } else if (currentState === TIMER_STATE.EXHALE) {
-                // Set the specific instructional text for the Exhale message box
-                messageBox.textContent = EXHALE_MESSAGE;
-            } else {
-                 messageBox.textContent = PHASE_TEXT[currentState];
-            }
-            
-            // Calculate current-remaining time for immediate UI update
             const remainingSeconds = (duration - (Date.now() - phaseStartTime)) / 1000;
             updateUI(currentState, remainingSeconds);
         };
@@ -701,7 +784,6 @@
         // --- Event Listeners and Initialization ---
 
         startButton.addEventListener('click', () => {
-             // Only allow starting from IDLE
             if (currentState === TIMER_STATE.IDLE) {
                 startSession();
             }
@@ -715,43 +797,37 @@
             }
         });
 
-        // Intercept Reset button click to open the confirmation modal
         resetButton.addEventListener('click', () => {
             if (currentState !== TIMER_STATE.IDLE) {
-                // 1. Check if timer is actively running (not IDLE or PAUSED)
                 wasRunningBeforeModal = (currentState !== TIMER_STATE.PAUSED);
 
-                // 2. If running, pause the timer. If paused, it just stays paused.
                 if (wasRunningBeforeModal) {
                     pauseTimer(); 
                 }
                 
-                // 3. Open the modal
                 openResetModal();
             }
         });
 
-        // Handle confirmation of reset
         confirmResetButton.addEventListener('click', () => {
-            resetSession(false); // Perform the actual reset
-            closeResetModal(); // Close the modal
-            wasRunningBeforeModal = false; // Clear flag
+            resetSession(false);
+            closeResetModal();
+            wasRunningBeforeModal = false;
         });
         
-        // Handle cancellation of reset
         cancelResetButton.addEventListener('click', () => {
             closeResetModal();
-            // Only resume if the session was running before the modal interrupted it
             if (wasRunningBeforeModal) {
                 resumeTimer();
             }
-            wasRunningBeforeModal = false; // Clear flag
+            wasRunningBeforeModal = false;
         });
 
-        // Initialization: Set the default duration before starting the UI
+        // Initialization: Set the default duration and initial instructions
         window.handleRestDurationChange('15'); 
         
-        // Ensure the initial UI is correct
+        // Initial setup for the UI
+        setStatusText(INITIAL_INSTRUCTIONS, TIMER_STATE.IDLE);
         updateUI(TIMER_STATE.IDLE, 0);
         updateSetBoxes(); 
 
