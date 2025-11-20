@@ -65,157 +65,147 @@
         }
     </style>
 </head>
-<body class="bg-dark-bg font-sans text-light-text h-screen flex items-center justify-center p-4 overflow-hidden">
+<body class="bg-dark-bg font-sans text-light-text flex items-center justify-center p-4 min-h-screen">
     
-    <!-- Confetti Container (Fixed and hidden by default) -->
-    <div id="confetti-container" class="fixed inset-0 pointer-events-none z-50 overflow-hidden"></div>
+    <!-- Confetti Container (Fixed and hidden by default) --><div id="confetti-container" class="fixed inset-0 pointer-events-none z-50 overflow-hidden"></div>
 
     <div id="app" class="w-full max-w-lg bg-gray-700 p-6 sm:p-8 rounded-xl shadow-2xl transition-all duration-300">
-        <h1 class="text-3xl font-bold text-center text-primary mb-2">York Breathing Exercise Timer</h1>
+        <!-- Permanent Header --><h1 class="text-3xl font-bold text-center text-primary mb-2">York Breathing Exercise Timer</h1>
         <p class="text-center text-sm text-gray-400 mb-6">for use with an EMST 75/150 Trainer</p>
-        
-        <!-- Rest Duration Selector -->
-        <div class="mb-6 p-4 bg-gray-800 rounded-lg text-sm text-gray-300 border-l-4 border-gray-600">
-            <label class="block text-md font-semibold text-gray-100 mb-2">Select Rest Phase Duration:</label>
-            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-6">
-                <label class="flex items-center space-x-2 cursor-pointer transition-colors duration-150 hover:text-primary">
-                    <input type="radio" name="rest-duration" value="15" checked 
-                           class="form-radio appearance-none h-4 w-4 border border-gray-400 rounded-full bg-gray-600 checked:bg-primary checked:border-primary focus:outline-none focus:ring-2 focus:ring-primary" 
-                           onchange="handleRestDurationChange(this.value)">
-                    <span>15 seconds</span>
-                </label>
-                <label class="flex items-center space-x-2 cursor-pointer transition-colors duration-150 hover:text-primary">
-                    <input type="radio" name="rest-duration" value="30" 
-                           class="form-radio appearance-none h-4 w-4 border border-gray-400 rounded-full bg-gray-600 checked:bg-primary checked:border-primary focus:outline-none focus:ring-2 focus:ring-primary" 
-                           onchange="handleRestDurationChange(this.value)">
-                    <span>30 seconds</span>
-                </label>
-            </div>
-        </div>
 
-        <!-- Status Display (Handles all messages and instructions) -->
-        <div class="text-center mb-8">
-            <div id="status-text" class="text-3xl font-extrabold mb-2 h-14 text-white flex items-center justify-center transition-colors duration-300">Ready</div>
-        </div>
-
-        <!-- Timer & Controls Wrapper (New Responsive Block) -->
-        <div class="flex flex-col sm:flex-row sm:justify-around sm:items-center mb-10">
-
-            <!-- Timer Display (The big circle) - Left side on desktop, top on mobile -->
-            <div id="timer-display-container" class="relative flex items-center justify-center h-48 w-48 sm:h-56 sm:w-56 mx-auto sm:mx-0">
-                <!-- Pulse Ring (only visible when active) -->
-                <div id="pulse-ring" class="absolute h-full w-full rounded-full bg-primary opacity-30 hidden"></div>
-                
-                <!-- Main Timer Circle -->
-                <div class="relative flex flex-col items-center justify-center h-full w-full rounded-full bg-gray-800 border-4 border-gray-600 shadow-inner-xl transition-all duration-300">
-                    <span id="timer-value" class="text-6xl sm:text-7xl font-mono font-bold text-primary transition-colors duration-300">0</span>
-                    <span class="text-sm font-medium text-gray-400 mt-2">seconds</span>
+        <!-- SETUP SCREEN (VISIBLE ON LOAD) --><div id="setup-screen" class="flex flex-col items-center justify-center space-y-6">
+            
+            <!-- Instructions and Duration Selector --><div id="rest-duration-selector" class="w-full mb-6 p-4 bg-gray-800 rounded-lg text-sm text-gray-300 border-l-4 border-gray-600">
+                <label class="block text-md font-semibold text-gray-100 mb-2">Select Rest Phase Duration:</label>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-6">
+                    <label class="flex items-center space-x-2 cursor-pointer transition-colors duration-150 hover:text-primary">
+                        <input type="radio" name="rest-duration" value="15" checked 
+                            class="form-radio appearance-none h-4 w-4 border border-gray-400 rounded-full bg-gray-600 checked:bg-primary checked:border-primary focus:outline-none focus:ring-2 focus:ring-primary" 
+                            onchange="handleRestDurationChange(this.value)">
+                        <span>15 seconds</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer transition-colors duration-150 hover:text-primary">
+                        <input type="radio" name="rest-duration" value="30" 
+                            class="form-radio appearance-none h-4 w-4 border border-gray-400 rounded-full bg-gray-600 checked:bg-primary checked:border-primary focus:outline-none focus:ring-2 focus:ring-primary" 
+                            onchange="handleRestDurationChange(this.value)">
+                        <span>30 seconds</span>
+                    </label>
                 </div>
             </div>
-
-            <!-- Controls (Now stacked vertically on the right) -->
-            <div class="mt-8 sm:mt-0 flex flex-col justify-center space-y-4 w-full sm:w-1/3 sm:min-w-max">
-                <button id="start-button" 
-                        class="px-6 py-3 text-lg font-semibold rounded-lg bg-primary hover:bg-secondary text-light-text transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-primary focus:ring-opacity-50 w-full">
-                    Start Session
-                </button>
-                
-                <!-- Dynamic Active/Paused Controls -->
-                <div id="active-controls" class="flex flex-col space-y-4 hidden">
-                    <button id="pause-resume-button" 
-                            class="px-6 py-3 text-lg font-semibold rounded-lg bg-red-600 hover:bg-red-700 text-light-text transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-red-600 focus:ring-opacity-50 w-full">
-                        Pause Session
-                    </button>
-                     <button id="reset-button" 
-                            class="px-6 py-3 text-lg font-semibold rounded-lg bg-gray-500 hover:bg-gray-600 text-light-text transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-gray-500 focus:ring-opacity-50 w-full">
-                        Reset Session
-                    </button>
-                </div>
+            
+            <!-- Initial Instruction Message --><div class="text-center w-full">
+                 <div id="initial-instruction-text" class="text-base font-semibold text-gray-300 mb-6 px-4">
+                    Press 'Start Session' to begin. Focus on Inhaling Deeply and Exhaling Forcefully against the device's resistance.
+                 </div>
             </div>
+            
+            <!-- Start Session Button (Triggers transition to workout) --><button id="start-button" 
+                    class="px-6 py-3 text-lg font-semibold rounded-lg bg-primary hover:bg-secondary text-light-text transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-primary focus:ring-opacity-50 w-full max-w-xs sm:max-w-none">
+                Start Session
+            </button>
         </div>
 
-        <!-- Set Progress Status Boxes -->
-        <div class="mt-8 pt-4 border-t border-gray-600">
-            <h3 class="text-lg font-semibold text-gray-300 mb-4 text-center">Set Progress (Reps Completed)</h3>
-            <div id="set-progress-container" class="grid grid-cols-5 gap-3">
-                
-                <!-- Set Box 1 -->
-                <div id="set-box-1" class="set-box relative p-2 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
-                    <div class="text-xs font-medium text-light-text opacity-70">Set 1</div>
-                    <div class="set-rep-counter text-xl font-bold text-light-text">0</div>
-                    <!-- Checkmark -->
-                    <div class="checkmark-container hidden absolute top-1 right-1">
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                    </div>
-                </div>
-                
-                <!-- Set Box 2 -->
-                <div id="set-box-2" class="set-box relative p-2 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
-                    <div class="text-xs font-medium text-light-text opacity-70">Set 2</div>
-                    <div class="set-rep-counter text-xl font-bold text-light-text">0</div>
-                    <!-- Checkmark -->
-                    <div class="checkmark-container hidden absolute top-1 right-1">
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                    </div>
-                </div>
-                
-                <!-- Set Box 3 -->
-                <div id="set-box-3" class="set-box relative p-2 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
-                    <div class="text-xs font-medium text-light-text opacity-70">Set 3</div>
-                    <div class="set-rep-counter text-xl font-bold text-light-text">0</div>
-                    <!-- Checkmark -->
-                    <div class="checkmark-container hidden absolute top-1 right-1">
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                        </svg>
+        <!-- WORKOUT SCREEN (HIDDEN ON LOAD) --><div id="workout-screen" class="hidden">
+            
+            <!-- Status Display (Handles all messages and instructions) --><div class="text-center mb-8">
+                <div id="status-text" class="text-3xl font-extrabold mb-2 h-14 text-white flex items-center justify-center transition-colors duration-300">Ready</div>
+            </div>
+
+            <!-- Timer & Controls Wrapper (New Responsive Block) --><div class="flex flex-col sm:flex-row sm:justify-around sm:items-center mb-10">
+
+                <!-- Timer Display (The big circle) - Left side on desktop, top on mobile --><div id="timer-display-container" class="relative flex items-center justify-center h-48 w-48 sm:h-56 sm:w-56 mx-auto sm:mx-0">
+                    <!-- Pulse Ring (only visible when active) --><div id="pulse-ring" class="absolute h-full w-full rounded-full bg-primary opacity-30 hidden"></div>
+                    
+                    <!-- Main Timer Circle --><div class="relative flex flex-col items-center justify-center h-full w-full rounded-full bg-gray-800 border-4 border-gray-600 shadow-inner-xl transition-all duration-300">
+                        <span id="timer-value" class="text-6xl sm:text-7xl font-mono font-bold text-primary transition-colors duration-300">0</span>
+                        <span class="text-sm font-medium text-gray-400 mt-2">seconds</span>
                     </div>
                 </div>
 
-                <!-- Set Box 4 -->
-                <div id="set-box-4" class="set-box relative p-2 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
-                    <div class="text-xs font-medium text-light-text opacity-70">Set 4</div>
-                    <div class="set-rep-counter text-xl font-bold text-light-text">0</div>
-                    <!-- Checkmark -->
-                    <div class="checkmark-container hidden absolute top-1 right-1">
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- Set Box 5 -->
-                <div id="set-box-5" class="set-box relative p-2 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
-                    <div class="text-xs font-medium text-light-text opacity-70">Set 5</div>
-                    <div class="set-rep-counter text-xl font-bold text-light-text">0</div>
-                    <!-- Checkmark -->
-                    <div class="checkmark-container hidden absolute top-1 right-1">
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                        </svg>
+                <!-- Controls (Now stacked vertically on the right) --><div class="mt-8 sm:mt-0 flex flex-col justify-center space-y-4 w-full sm:w-1/3 sm:min-w-max">
+                    
+                    <!-- Dynamic Active/Paused Controls --><div id="active-controls" class="flex flex-col space-y-4">
+                        <button id="pause-resume-button" 
+                                class="px-6 py-3 text-lg font-semibold rounded-lg bg-red-600 hover:bg-red-700 text-light-text transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-red-600 focus:ring-opacity-50 w-full">
+                            Pause Session
+                        </button>
+                        <button id="reset-button" 
+                                class="px-6 py-3 text-lg font-semibold rounded-lg bg-gray-500 hover:bg-gray-600 text-light-text transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-gray-500 focus:ring-opacity-50 w-full">
+                            Reset Session
+                        </button>
                     </div>
                 </div>
             </div>
+
+            <!-- Set Progress Status Boxes --><div class="mt-8 pt-4 border-t border-gray-600">
+                <h3 class="text-lg font-semibold text-gray-300 mb-4 text-center">Set Progress (Breathes Completed)</h3>
+                <div id="set-progress-container" class="grid grid-cols-5 gap-3">
+                    
+                    <!-- Set Box 1 --><div id="set-box-1" class="set-box relative p-2 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
+                        <div class="text-xs font-medium text-light-text opacity-70">Set 1</div>
+                        <div class="set-rep-counter text-xl font-bold text-light-text">0</div>
+                        <!-- Checkmark --><div class="checkmark-container hidden absolute top-1 right-1">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Set Box 2 --><div id="set-box-2" class="set-box relative p-2 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
+                        <div class="text-xs font-medium text-light-text opacity-70">Set 2</div>
+                        <div class="set-rep-counter text-xl font-bold text-light-text">0</div>
+                        <!-- Checkmark --><div class="checkmark-container hidden absolute top-1 right-1">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Set Box 3 --><div id="set-box-3" class="set-box relative p-2 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
+                        <div class="text-xs font-medium text-light-text opacity-70">Set 3</div>
+                        <div class="set-rep-counter text-xl font-bold text-light-text">0</div>
+                        <!-- Checkmark --><div class="checkmark-container hidden absolute top-1 right-1">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Set Box 4 --><div id="set-box-4" class="set-box relative p-2 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
+                        <div class="text-xs font-medium text-light-text opacity-70">Set 4</div>
+                        <div class="set-rep-counter text-xl font-bold text-light-text">0</div>
+                        <!-- Checkmark --><div class="checkmark-container hidden absolute top-1 right-1">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Set Box 5 --><div id="set-box-5" class="set-box relative p-2 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
+                        <div class="text-xs font-medium text-light-text opacity-70">Set 5</div>
+                        <div class="set-rep-counter text-xl font-bold text-light-text">0</div>
+                        <!-- Checkmark --><div class="checkmark-container hidden absolute top-1 right-1">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Total Time Remaining Display --><div class="mt-4 pb-2 text-center text-sm font-medium text-gray-400">
+                <span id="total-time-label">Time Remaining:</span>
+                <span id="total-time-value" class="ml-2 text-white font-bold">00:00</span>
+            </div>
+            
         </div>
-        
-        <!-- Total Time Remaining Display -->
-        <div class="mt-4 text-center text-sm font-medium text-gray-400">
-            <span id="total-time-label">Time Remaining:</span>
-            <span id="total-time-value" class="ml-2 text-white font-bold">00:00</span>
-        </div>
-        
     </div>
 
-    <!-- Confirmation Modal HTML -->
-    <div id="reset-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-75 transition-opacity duration-300" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <!-- Confirmation Modal HTML --><div id="reset-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-75 transition-opacity duration-300" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="bg-gray-700 rounded-xl p-6 w-11/12 max-w-sm shadow-2xl transform transition-all">
             <div class="flex flex-col items-center">
                 <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-                    <!-- Icon for confirmation - using simple SVG cross -->
-                    <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <!-- Icon for confirmation - using simple SVG cross --><svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.332 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                 </div>
@@ -263,13 +253,13 @@
         };
         
         // Constants for Total Session Time calculation
-        const TOTAL_REPS = 25; // 5 Sets * 5 Reps
+        const TOTAL_REPS = 25; // 5 Sets * 5 Reps (Actual reps performed)
         const NUM_LONG_BREAKS = 4; // Breaks after Sets 1, 2, 3, 4
         const LONG_BREAK_DURATION_MS = 60000; // 1 minute
 
         // Instructional messages
         const INITIAL_INSTRUCTIONS = "Press 'Start Session' to begin. Focus on Inhaling Deeply and Exhaling Forcefully against the device's resistance.";
-        const EXHALE_INSTRUCTIONS = 'Exhale Forcefully (< 2 seconds)'; 
+        const EXHALE_INSTRUCTIONS = 'Exhale Quickly'; 
         const PAUSE_INSTRUCTIONS = "Session Paused. Click 'Resume Session' to Continue.";
 
 
@@ -305,10 +295,15 @@
         // activeStateBeforePause will hold ACTIVE_REP or LONG_BREAK
         let activeStateBeforePause = TIMER_STATE.ACTIVE_REP; 
         let wasRunningBeforeModal = false;
+        
+        // --- Wake Lock Variables ---
+        let wakeLockSentinel = null;
 
 
         // DOM Elements
-        const startButton = document.getElementById('start-button');
+        const startScreen = document.getElementById('setup-screen');
+        const workoutScreen = document.getElementById('workout-screen');
+        const startButton = document.getElementById('start-button'); // Renamed from start-button-dialog
         const activeControls = document.getElementById('active-controls');
         const pauseResumeButton = document.getElementById('pause-resume-button');
         const resetButton = document.getElementById('reset-button');
@@ -324,10 +319,43 @@
         // MODAL ELEMENTS
         const resetModal = document.getElementById('reset-modal');
         const confirmResetButton = document.getElementById('confirm-reset');
-        const cancelResetButton = document.getElementById('cancel-reset');
+        const cancelResetButton = document.getElementById('cancel-reset'); 
         
         let audioContext;
         
+        // --- Wake Lock Functions ---
+        const requestWakeLock = async () => {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLockSentinel = await navigator.wakeLock.request('screen');
+                    wakeLockSentinel.addEventListener('release', () => {
+                        // The wake lock was released (e.g., app moved to background)
+                        console.log('Wake Lock released.');
+                        // If the timer is still active, try to re-request it when the user returns
+                        if (currentState !== TIMER_STATE.IDLE && currentState !== TIMER_STATE.PAUSED) {
+                            requestWakeLock();
+                        }
+                    });
+                    console.log('Wake Lock acquired.');
+                } catch (err) {
+                    // FIX: Suppress NotAllowedError as it's often due to environment/iframe restrictions.
+                    if (err.name !== 'NotAllowedError') {
+                         console.error(`Wake Lock request failed: ${err.name}, ${err.message}`);
+                    }
+                }
+            } else {
+                console.warn('Wake Lock API not supported on this device/browser.');
+            }
+        };
+
+        const releaseWakeLock = () => {
+            if (wakeLockSentinel !== null) {
+                wakeLockSentinel.release();
+                wakeLockSentinel = null;
+                console.log('Wake Lock released.');
+            }
+        };
+
         // --- Helper Functions ---
         
         /** Formats milliseconds into M:SS string. */
@@ -345,9 +373,11 @@
 
         /** Calculates the total session duration based on current rep duration setting. */
         const calculateTotalDuration = (repDurationMs) => {
-            // Total Duration = (25 Reps * Rep Duration) + (4 Breaks * 1 Min)
-            // Note: The last set does not have a break.
-            totalSessionDurationMs = (TOTAL_REPS * repDurationMs) + (NUM_LONG_BREAKS * LONG_BREAK_DURATION_MS);
+            // Requirement: Time Remaining starts at (20 * selected duration) + 4 minutes (240,000 ms).
+            const CALCULATED_REPS = 20; 
+            const FIXED_BREAK_MS = 240000; // 4 minutes
+
+            totalSessionDurationMs = (CALCULATED_REPS * repDurationMs) + FIXED_BREAK_MS;
         };
         
         /** Generates and animates a burst of confetti. */
@@ -363,19 +393,21 @@
                 // Random position, color, size, and delay
                 confetti.style.left = `${Math.random() * 100}vw`;
                 confetti.style.backgroundColor = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
-                confetti.style.width = `${Math.random() * 5 + 5}px`;
+                // Make confetti particles bigger: base size 10px, random additional up to 10px
+                confetti.style.width = `${Math.random() * 10 + 10}px`; 
                 confetti.style.height = confetti.style.width;
-                confetti.style.animationDuration = `${Math.random() * 3 + 4}s`; // 4s to 7s duration
-                confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+                // Make confetti fall slower for more visibility and longer duration
+                confetti.style.animationDuration = `${Math.random() * 4 + 5}s`; // 5s to 9s duration
+                confetti.style.animationDelay = `${Math.random() * 0.8}s`; // Slightly longer delay spread
                 confetti.style.opacity = 1;
                 
                 confettiContainer.appendChild(confetti);
             }
             
-            // Hide and clear confetti after the animation duration (e.g., 7 seconds max)
+            // Hide and clear confetti after the maximum animation duration (e.g., 9 seconds max + a buffer)
             setTimeout(() => {
                 confettiContainer.innerHTML = '';
-            }, 7000);
+            }, 10000); // 10 seconds total to ensure all animations complete
         };
 
 
@@ -413,25 +445,22 @@
         // --- Duration Handler Function ---
         window.handleRestDurationChange = (value) => {
             let newDurationMs;
-            let newLabel;
 
             if (value === '30') {
                 newDurationMs = 30000; // 1s Inhale + 2s Exhale + 27s Rest = 30s
-                newLabel = 'Rest & Recover'; // Simplified label
             } else {
                 newDurationMs = 15000; // 1s Inhale + 2s Exhale + 12s Rest = 15s
-                newLabel = 'Rest & Recover'; // Simplified label
             }
 
             // Check if session is running and force reset
             if (currentState !== TIMER_STATE.IDLE) {
-                resetSession(false);
+                // This will trigger a full UI reset, including showing the start screen again
+                resetSession(false); 
                 setStatusText(`Duration Changed. Session Was Reset. Press 'Start Session' to Begin.`, TIMER_STATE.IDLE);
             }
 
             // Update internal variables and constants globally
             currentRepDurationMs = newDurationMs;
-            currentRestLabel = newLabel;
             PHASE_DURATIONS_MS[TIMER_STATE.ACTIVE_REP] = currentRepDurationMs;
             
             // Recalculate total session duration
@@ -505,7 +534,7 @@
                     checkmarkElement.classList.add('hidden');
                 } else if (reps === 5) {
                     box.classList.add('bg-green-500'); 
-                    checkmarkElement.classList.remove('hidden');
+                    checkmarkElement.classList.remove('hidden'); // Show checkmark when count is 5
                 }
             });
         };
@@ -540,6 +569,9 @@
                 animationFrameId = null;
             }
             
+            // Release Wake Lock
+            releaseWakeLock();
+
             currentState = TIMER_STATE.IDLE;
             repCount = 0;
             timeRemainingWhenPaused = 0;
@@ -547,8 +579,14 @@
             lastPlayedSubPhase = null; // Reset audio tracker
             sessionStartTime = 0; // Reset session start time
             
-            // UI reset
+            // --- UI Reset: Show Setup Screen, Hide Workout Screen ---
+            workoutScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+            
+            // Show start button on setup screen
             startButton.classList.remove('hidden');
+            
+            // Hide active controls
             activeControls.classList.add('hidden');
 
             if (isCompleted) {
@@ -557,7 +595,7 @@
                 showCelebration(); // <-- Show confetti for celebration!
             } else {
                 // Reset message or Initial Instructions
-                setStatusText(INITIAL_INSTRUCTIONS, TIMER_STATE.IDLE);
+                setStatusText('Ready', TIMER_STATE.IDLE);
             }
             
             timerValue.textContent = '0';
@@ -576,34 +614,14 @@
         const nextState = () => {
             let nextPhase;
 
-            // This only handles transitions between major phases (Rep Cycle, Long Break, End)
+            // This function only handles transitions when the current phase's timer naturally expires.
             switch (currentState) {
                 case TIMER_STATE.ACTIVE_REP:
-                    repCount++; 
-                    
-                    const currentSetIndex = Math.floor((repCount - 1) / 5); 
-                    const currentRepInSet = (repCount % 5) || 5;
-                    
-                    if (currentSetIndex < 5) {
-                        setProgress[currentSetIndex] = currentRepInSet; 
-                        updateSetBoxes();
-                    }
-
-                    // *** MODIFIED LOGIC HERE ***
-                    if (repCount >= 25) { 
-                        // If the final rep (rep 25) is complete, end the session immediately.
-                        resetSession(true); 
-                        return;
-                    } else if (repCount % 5 === 0) {
-                        // If a set (1-4) is complete, go to the long break.
-                        nextPhase = TIMER_STATE.LONG_BREAK;
-                    } else {
-                        // Normal rep cycle, repeat ACTIVE_REP (which handles the rest period internally).
-                        nextPhase = TIMER_STATE.ACTIVE_REP;
-                    }
+                    // This is reached only after Reps 1, 2, 3, 4 fully complete the 15s/30s duration.
+                    nextPhase = TIMER_STATE.ACTIVE_REP;
                     break;
                 case TIMER_STATE.LONG_BREAK:
-                    // This case is only reached after Sets 1-4.
+                    // This is reached after Sets 1, 2, 3, 4 complete the 60s break.
                     nextPhase = TIMER_STATE.ACTIVE_REP;
                     break;
                 case TIMER_STATE.IDLE: // Start from ACTIVE_REP
@@ -621,7 +639,7 @@
             // Set Status Text immediately for the new major phase
             if (currentState === TIMER_STATE.LONG_BREAK) {
                 const completedSet = repCount / 5; 
-                const breakMessage = `1 Minute Break<br><span class="text-xl font-normal">(Set ${completedSet} Complete)</span>`; 
+                const breakMessage = `Long Rest<br><span class="text-xl font-normal">(Set ${completedSet} Complete)</span>`; 
                 setStatusText(breakMessage, currentState);
             } 
             
@@ -639,6 +657,53 @@
                 subPhase = SUB_PHASE.EXHALE;
             } else {
                 subPhase = SUB_PHASE.REST;
+                
+                // --- INCREMENT COUNTER AND EARLY TRANSITION LOGIC (at 3000ms) ---
+                // Check if we just transitioned INTO the REST phase (at 3000ms)
+                if (lastPlayedSubPhase !== SUB_PHASE.REST) {
+                    
+                    repCount++; 
+                    const currentSetIndex = Math.floor((repCount - 1) / 5); 
+                    const currentRepInSet = (repCount % 5) || 5;
+                    
+                    if (currentSetIndex < 5) {
+                        setProgress[currentSetIndex] = currentRepInSet; 
+                        updateSetBoxes(); // Update UI immediately (Reps/Checkmark)
+                    }
+                    
+                    // Check for immediate transition (End of Set or End of Session)
+                    if (repCount % 5 === 0) {
+                        // This is the 5th rep of a set (repCount = 5, 10, 15, 20, 25)
+                        
+                        cancelAnimationFrame(animationFrameId);
+                        animationFrameId = null;
+                        
+                        // If it's the final rep of the entire session (rep 25)
+                        if (repCount >= 25) {
+                            resetSession(true); // Session Complete immediately
+                            return;
+                        } 
+                        
+                        // If it's rep 5, 10, 15, or 20, go straight to Long Break
+                        if (repCount < 25) {
+                            // Force the transition to LONG_BREAK
+                            currentState = TIMER_STATE.LONG_BREAK;
+                            phaseStartTime = Date.now();
+                            lastPlayedSubPhase = null;
+                            
+                            const completedSet = repCount / 5; 
+                            const breakMessage = `Long Rest<br><span class="text-xl font-normal">(Set ${completedSet} Complete)</span>`; 
+                            setStatusText(breakMessage, currentState);
+                            
+                            updateUI(currentState, PHASE_DURATIONS_MS[currentState] / 1000); 
+                            
+                            // The main tick loop will continue from here
+                            requestAnimationFrame(tick);
+                            return;
+                        }
+                    }
+                }
+                // --- END INCREMENT COUNTER AND EARLY TRANSITION LOGIC ---
             }
             
             playTransitionChime(subPhase);
@@ -697,9 +762,13 @@
             if (currentState !== TIMER_STATE.IDLE) return;
             
             initAudio(); 
+            requestWakeLock(); // <-- ACQUIRE WAKE LOCK ON START
             
-            // UI setup
-            startButton.classList.add('hidden');
+            // --- UI Transition: Hide Setup Screen, Show Workout Screen ---
+            startScreen.classList.add('hidden');
+            workoutScreen.classList.remove('hidden');
+            
+            // UI setup for workout
             activeControls.classList.remove('hidden');
             pauseResumeButton.textContent = 'Pause Session';
             pauseResumeButton.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
@@ -722,6 +791,9 @@
                 animationFrameId = null;
             }
             
+            // Release Wake Lock
+            releaseWakeLock();
+
             const elapsedSincePhaseStart = Date.now() - phaseStartTime;
             const duration = PHASE_DURATIONS_MS[currentState];
             timeRemainingWhenPaused = duration - elapsedSincePhaseStart;
@@ -751,6 +823,7 @@
         /** Resumes the timer. */
         const resumeTimer = () => {
             currentState = activeStateBeforePause; 
+            requestWakeLock(); // <-- ACQUIRE WAKE LOCK ON RESUME
 
             const duration = PHASE_DURATIONS_MS[currentState];
             
@@ -765,7 +838,7 @@
             // Recalculate and set the status text immediately
             if (currentState === TIMER_STATE.LONG_BREAK) {
                  const completedSet = repCount / 5; 
-                 const breakMessage = `1 Minute Break<br><span class="text-xl font-normal">(Set ${completedSet} Complete)</span>`; 
+                 const breakMessage = `Long Rest<br><span class="text-xl font-normal">(Set ${completedSet} Complete)</span>`; 
                  setStatusText(breakMessage, currentState);
             } else if (currentState === TIMER_STATE.ACTIVE_REP) {
                  // Calculate elapsed time since phase start to determine the sub-phase
@@ -827,7 +900,7 @@
         window.handleRestDurationChange('15'); 
         
         // Initial setup for the UI
-        setStatusText(INITIAL_INSTRUCTIONS, TIMER_STATE.IDLE);
+        setStatusText('Ready', TIMER_STATE.IDLE);
         updateUI(TIMER_STATE.IDLE, 0);
         updateSetBoxes(); 
 
