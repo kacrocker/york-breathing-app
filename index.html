@@ -70,32 +70,31 @@
     <!-- Confetti Container (Fixed and hidden by default) --><div id="confetti-container" class="fixed inset-0 pointer-events-none z-50 overflow-hidden"></div>
 
     <div id="app" class="w-full max-w-lg bg-gray-700 p-6 sm:p-8 rounded-xl shadow-2xl transition-all duration-300">
-        <!-- Permanent Header --><h1 class="text-3xl font-bold text-center text-primary mb-2">York Breathing Exercise Timer</h1>
-        <p class="text-center text-sm text-gray-400 mb-6">for use with an EMST 75/150 Trainer</p>
+        <!-- Permanent Header --><h1 class="text-3xl font-bold text-center text-primary mb-2">
+            <span class="sm:hidden">York Timer</span>
+            <span class="hidden sm:inline">York Breathing Exercise Timer</span>
+        </h1>
+        <p class="text-center text-sm text-gray-400 mb-6 hidden sm:block">for use with an EMST 75/150 Trainer</p>
 
         <!-- SETUP SCREEN (VISIBLE ON LOAD) --><div id="setup-screen" class="flex flex-col items-center justify-center space-y-6">
             
             <!-- Instructions and Duration Selector --><div id="rest-duration-selector" class="w-full mb-6 p-4 bg-gray-800 rounded-lg text-sm text-gray-300 border-l-4 border-gray-600">
                 <label class="block text-md font-semibold text-gray-100 mb-2">Select Rest Phase Duration:</label>
                 <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-6">
-                    <label class="flex items-center space-x-2 cursor-pointer transition-colors duration-150 hover:text-primary">
-                        <input type="radio" name="rest-duration" value="15" checked 
-                            class="form-radio appearance-none h-4 w-4 border border-gray-400 rounded-full bg-gray-600 checked:bg-primary checked:border-primary focus:outline-none focus:ring-2 focus:ring-primary" 
-                            onchange="handleRestDurationChange(this.value)">
-                        <span>15 seconds</span>
-                    </label>
-                    <label class="flex items-center space-x-2 cursor-pointer transition-colors duration-150 hover:text-primary">
-                        <input type="radio" name="rest-duration" value="30" 
-                            class="form-radio appearance-none h-4 w-4 border border-gray-400 rounded-full bg-gray-600 checked:bg-primary checked:border-primary focus:outline-none focus:ring-2 focus:ring-primary" 
-                            onchange="handleRestDurationChange(this.value)">
-                        <span>30 seconds</span>
-                    </label>
+                    <div class="flex-1 bg-primary text-white rounded-lg p-3 cursor-pointer text-center font-bold transition-colors duration-200 shadow-md border-2 border-primary"
+                         id="btn-duration-15" onclick="handleRestDurationChange('15')">
+                        15 seconds
+                    </div>
+                    <div class="flex-1 bg-gray-600 text-gray-300 rounded-lg p-3 cursor-pointer text-center font-bold transition-colors duration-200 shadow-md border-2 border-transparent hover:border-gray-500"
+                         id="btn-duration-30" onclick="handleRestDurationChange('30')">
+                        30 seconds
+                    </div>
                 </div>
             </div>
             
             <!-- Initial Instruction Message --><div class="text-center w-full">
                  <div id="initial-instruction-text" class="text-base font-semibold text-gray-300 mb-6 px-4">
-                    Press 'Start Session' to begin. Focus on Inhaling Deeply and Exhaling Forcefully against the device's resistance.
+                    Please make sure your sound is ON and the volume is turned up. Then press "Start Session" to begin. Focus on inhaling deeply and exhaling forcefully and quickly against the device's resistance.
                  </div>
             </div>
             
@@ -107,22 +106,22 @@
 
         <!-- WORKOUT SCREEN (HIDDEN ON LOAD) --><div id="workout-screen" class="hidden">
             
-            <!-- Status Display (Handles all messages and instructions) --><div class="text-center mb-8">
-                <div id="status-text" class="text-3xl font-extrabold mb-2 h-14 text-white flex items-center justify-center transition-colors duration-300">Ready</div>
+            <!-- Status Display (Handles all messages and instructions) --><div class="text-center mb-4">
+                <div id="status-text" class="text-3xl font-extrabold mb-2 h-10 text-white flex items-center justify-center transition-colors duration-300">Ready</div>
             </div>
 
             <!-- Timer & Controls Wrapper (New Responsive Block) --><div class="flex flex-col sm:flex-row sm:justify-around sm:items-center mb-10">
 
-                <!-- Timer Display (The big circle) - Left side on desktop, top on mobile --><div id="timer-display-container" class="relative flex items-center justify-center h-48 w-48 sm:h-56 sm:w-56 mx-auto sm:mx-0">
+                <!-- Timer Display (The big circle) - Left side on desktop, top on mobile --><div id="timer-display-container" class="relative flex items-center justify-center h-40 w-40 sm:h-56 sm:w-56 mx-auto sm:mx-0">
                     <!-- Pulse Ring (only visible when active) --><div id="pulse-ring" class="absolute h-full w-full rounded-full bg-primary opacity-30 hidden"></div>
                     
                     <!-- Main Timer Circle --><div class="relative flex flex-col items-center justify-center h-full w-full rounded-full bg-gray-800 border-4 border-gray-600 shadow-inner-xl transition-all duration-300">
-                        <span id="timer-value" class="text-6xl sm:text-7xl font-mono font-bold text-primary transition-colors duration-300">0</span>
+                        <span id="timer-value" class="text-5xl sm:text-7xl font-mono font-bold text-primary transition-colors duration-300">0</span>
                         <span class="text-sm font-medium text-gray-400 mt-2">seconds</span>
                     </div>
                 </div>
 
-                <!-- Controls (Now stacked vertically on the right) --><div class="mt-8 sm:mt-0 flex flex-col justify-center space-y-4 w-full sm:w-1/3 sm:min-w-max">
+                <!-- Controls (Now stacked vertically on the right) --><div class="mt-4 sm:mt-0 flex flex-col justify-center space-y-4 w-full sm:w-1/3 sm:min-w-max">
                     
                     <!-- Dynamic Active/Paused Controls --><div id="active-controls" class="flex flex-col space-y-4">
                         <button id="pause-resume-button" 
@@ -137,13 +136,13 @@
                 </div>
             </div>
 
-            <!-- Set Progress Status Boxes --><div class="mt-8 pt-4 border-t border-gray-600">
+            <!-- Set Progress Status Boxes --><div class="mt-4 pt-4 border-t border-gray-600">
                 <h3 class="text-lg font-semibold text-gray-300 mb-4 text-center">Set Progress (Breathes Completed)</h3>
                 <div id="set-progress-container" class="grid grid-cols-5 gap-3">
                     
-                    <!-- Set Box 1 --><div id="set-box-1" class="set-box relative p-2 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
+                    <!-- Set Box 1 --><div id="set-box-1" class="set-box relative p-1 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
                         <div class="text-xs font-medium text-light-text opacity-70">Set 1</div>
-                        <div class="set-rep-counter text-xl font-bold text-light-text">0</div>
+                        <div class="set-rep-counter text-lg font-bold text-light-text">0</div>
                         <!-- Checkmark --><div class="checkmark-container hidden absolute top-1 right-1">
                             <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
@@ -151,9 +150,9 @@
                         </div>
                     </div>
                     
-                    <!-- Set Box 2 --><div id="set-box-2" class="set-box relative p-2 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
+                    <!-- Set Box 2 --><div id="set-box-2" class="set-box relative p-1 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
                         <div class="text-xs font-medium text-light-text opacity-70">Set 2</div>
-                        <div class="set-rep-counter text-xl font-bold text-light-text">0</div>
+                        <div class="set-rep-counter text-lg font-bold text-light-text">0</div>
                         <!-- Checkmark --><div class="checkmark-container hidden absolute top-1 right-1">
                             <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
@@ -161,9 +160,9 @@
                         </div>
                     </div>
                     
-                    <!-- Set Box 3 --><div id="set-box-3" class="set-box relative p-2 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
+                    <!-- Set Box 3 --><div id="set-box-3" class="set-box relative p-1 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
                         <div class="text-xs font-medium text-light-text opacity-70">Set 3</div>
-                        <div class="set-rep-counter text-xl font-bold text-light-text">0</div>
+                        <div class="set-rep-counter text-lg font-bold text-light-text">0</div>
                         <!-- Checkmark --><div class="checkmark-container hidden absolute top-1 right-1">
                             <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
@@ -171,9 +170,9 @@
                         </div>
                     </div>
 
-                    <!-- Set Box 4 --><div id="set-box-4" class="set-box relative p-2 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
+                    <!-- Set Box 4 --><div id="set-box-4" class="set-box relative p-1 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
                         <div class="text-xs font-medium text-light-text opacity-70">Set 4</div>
-                        <div class="set-rep-counter text-xl font-bold text-light-text">0</div>
+                        <div class="set-rep-counter text-lg font-bold text-light-text">0</div>
                         <!-- Checkmark --><div class="checkmark-container hidden absolute top-1 right-1">
                             <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
@@ -181,9 +180,9 @@
                         </div>
                     </div>
 
-                    <!-- Set Box 5 --><div id="set-box-5" class="set-box relative p-2 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
+                    <!-- Set Box 5 --><div id="set-box-5" class="set-box relative p-1 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
                         <div class="text-xs font-medium text-light-text opacity-70">Set 5</div>
-                        <div class="set-rep-counter text-xl font-bold text-light-text">0</div>
+                        <div class="set-rep-counter text-lg font-bold text-light-text">0</div>
                         <!-- Checkmark --><div class="checkmark-container hidden absolute top-1 right-1">
                             <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
@@ -258,8 +257,8 @@
         const LONG_BREAK_DURATION_MS = 60000; // 1 minute
 
         // Instructional messages
-        const INITIAL_INSTRUCTIONS = "Press 'Start Session' to begin. Focus on Inhaling Deeply and Exhaling Forcefully against the device's resistance.";
-        const EXHALE_INSTRUCTIONS = 'Exhale Quickly'; 
+        const INITIAL_INSTRUCTIONS = "Please make sure your sound is ON and the volume is turned up. Then press \"Start Session\" to begin. Focus on inhaling deeply and exhaling forcefully and quickly against the device's resistance.";
+        const EXHALE_INSTRUCTIONS = 'Exhale Forcefully (< 2 seconds)'; 
         const PAUSE_INSTRUCTIONS = "Session Paused. Click 'Resume Session' to Continue.";
 
 
@@ -272,6 +271,7 @@
         let currentRepDurationMs = 15000;
         let currentRestLabel = 'Rest & Recover'; // Simplified label
         let totalSessionDurationMs = 0; // Calculated on start/duration change
+        let selectedDuration = '15'; // Track currently selected duration state
 
 
         const PHASE_COLOR_CLASS = {
@@ -303,7 +303,7 @@
         // DOM Elements
         const startScreen = document.getElementById('setup-screen');
         const workoutScreen = document.getElementById('workout-screen');
-        const startButton = document.getElementById('start-button'); // Renamed from start-button-dialog
+        const startButton = document.getElementById('start-button');
         const activeControls = document.getElementById('active-controls');
         const pauseResumeButton = document.getElementById('pause-resume-button');
         const resetButton = document.getElementById('reset-button');
@@ -314,6 +314,8 @@
         const setBoxes = document.querySelectorAll('.set-box');
         const totalTimeValue = document.getElementById('total-time-value');
         const confettiContainer = document.getElementById('confetti-container');
+        const btnDuration15 = document.getElementById('btn-duration-15');
+        const btnDuration30 = document.getElementById('btn-duration-30');
 
 
         // MODAL ELEMENTS
@@ -373,11 +375,13 @@
 
         /** Calculates the total session duration based on current rep duration setting. */
         const calculateTotalDuration = (repDurationMs) => {
-            // Requirement: Time Remaining starts at (20 * selected duration) + 4 minutes (240,000 ms).
-            const CALCULATED_REPS = 20; 
-            const FIXED_BREAK_MS = 240000; // 4 minutes
+            // Requirement: Time Remaining starts at (20 * selected duration) + 4 minutes + 15 seconds for partials
+            // Total Duration = (20 Full Reps * Rep Duration) + (4 Breaks * 1 Min) + (5 Partial Reps * 3s)
+            const FULL_REPS = 20; 
+            const PARTIAL_REPS_MS = 5 * 3000; // 15 seconds for the 5 partial exhale breaths
+            const FIXED_BREAK_MS = 4 * 60000; // 4 minutes for breaks
 
-            totalSessionDurationMs = (CALCULATED_REPS * repDurationMs) + FIXED_BREAK_MS;
+            totalSessionDurationMs = (FULL_REPS * repDurationMs) + FIXED_BREAK_MS + PARTIAL_REPS_MS;
         };
         
         /** Generates and animates a burst of confetti. */
@@ -386,7 +390,7 @@
             confettiContainer.innerHTML = '';
             
             // Generate 50 particles
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < 150; i++) {
                 const confetti = document.createElement('div');
                 confetti.classList.add('confetti');
                 
@@ -417,17 +421,17 @@
             
             // Determine color class: use phase color if available, otherwise default to white
             const colorClass = PHASE_COLOR_CLASS[phase] || PHASE_COLOR_CLASS[TIMER_STATE.IDLE];
-            statusText.className = `font-extrabold mb-2 h-14 flex items-center justify-center transition-colors duration-300 ${colorClass}`; 
+            statusText.className = `font-extrabold mb-2 h-10 flex items-center justify-center transition-colors duration-300 ${colorClass}`; 
 
             // Adjust font size based on content length or line breaks
-            if (text.length > 30 || text.includes('<br>')) {
+            if (text.length > 25 || text.includes('<br>')) {
                 // For long messages/instructions/breaks
-                statusText.classList.add('text-xl', 'font-semibold'); 
+                statusText.classList.add('text-lg', 'font-semibold'); 
                 statusText.classList.remove('text-3xl'); 
             } else {
                 // For short phase names (e.g., Inhale Deeply, Paused, Ready)
-                statusText.classList.add('text-3xl'); 
-                statusText.classList.remove('text-xl', 'font-semibold'); 
+                statusText.classList.add('text-2xl'); 
+                statusText.classList.remove('text-lg', 'font-semibold'); 
             }
         };
 
@@ -442,25 +446,47 @@
             resetModal.classList.remove('flex');
         };
 
+        const updateDurationButtons = (value) => {
+            if (value === '15') {
+                btnDuration15.classList.add('bg-primary', 'text-white', 'border-primary');
+                btnDuration15.classList.remove('bg-gray-600', 'text-gray-300', 'border-transparent', 'hover:border-gray-500');
+                
+                btnDuration30.classList.add('bg-gray-600', 'text-gray-300', 'border-transparent', 'hover:border-gray-500');
+                btnDuration30.classList.remove('bg-primary', 'text-white', 'border-primary');
+            } else {
+                btnDuration30.classList.add('bg-primary', 'text-white', 'border-primary');
+                btnDuration30.classList.remove('bg-gray-600', 'text-gray-300', 'border-transparent', 'hover:border-gray-500');
+                
+                btnDuration15.classList.add('bg-gray-600', 'text-gray-300', 'border-transparent', 'hover:border-gray-500');
+                btnDuration15.classList.remove('bg-primary', 'text-white', 'border-primary');
+            }
+        };
+
         // --- Duration Handler Function ---
         window.handleRestDurationChange = (value) => {
+            selectedDuration = value;
+            updateDurationButtons(value); // Update UI visuals
+
             let newDurationMs;
+            let newLabel;
 
             if (value === '30') {
                 newDurationMs = 30000; // 1s Inhale + 2s Exhale + 27s Rest = 30s
+                newLabel = 'Rest & Recover'; // Simplified label
             } else {
                 newDurationMs = 15000; // 1s Inhale + 2s Exhale + 12s Rest = 15s
+                newLabel = 'Rest & Recover'; // Simplified label
             }
 
             // Check if session is running and force reset
             if (currentState !== TIMER_STATE.IDLE) {
-                // This will trigger a full UI reset, including showing the start screen again
-                resetSession(false); 
+                resetSession(false);
                 setStatusText(`Duration Changed. Session Was Reset. Press 'Start Session' to Begin.`, TIMER_STATE.IDLE);
             }
 
             // Update internal variables and constants globally
             currentRepDurationMs = newDurationMs;
+            currentRestLabel = newLabel;
             PHASE_DURATIONS_MS[TIMER_STATE.ACTIVE_REP] = currentRepDurationMs;
             
             // Recalculate total session duration
@@ -469,63 +495,44 @@
             totalTimeValue.textContent = formatTime(totalSessionDurationMs);
         };
         
-        /** Initializes the Web Audio API context. */
         const initAudio = () => {
             if (!audioContext) {
                 try {
                     audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                } catch (e) {
-                    console.error('Web Audio API not supported:', e);
-                }
+                } catch (e) { console.error('Web Audio API not supported:', e); }
             }
         };
 
-
-        // --- Audio Functions ---
         const playTone = (frequency, duration) => {
             if (!audioContext) return;
-            
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
-
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
-
             oscillator.type = 'sine';
             oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-
-            gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+            // Updated gain to 1.0 for louder sound
+            gainNode.gain.setValueAtTime(1.0, audioContext.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
-
             oscillator.start();
             oscillator.stop(audioContext.currentTime + duration);
         };
         
-        // This function now uses the subPhase state passed to it
         let lastPlayedSubPhase = null;
         const playTransitionChime = (subPhase) => {
-             // Only play chime when transitioning into a new subPhase
              if (lastPlayedSubPhase === subPhase) return;
-             
-             if (subPhase === SUB_PHASE.INHALE || subPhase === SUB_PHASE.REST) {
-                playTone(440, 0.1); // Low-pitch chime for prep/rest
-             }
-             if (subPhase === SUB_PHASE.EXHALE) {
-                playTone(880, 0.2); // High-pitch beep for action
-             }
+             if (subPhase === SUB_PHASE.INHALE || subPhase === SUB_PHASE.REST) { playTone(440, 0.1); }
+             if (subPhase === SUB_PHASE.EXHALE) { playTone(880, 0.2); }
              lastPlayedSubPhase = subPhase;
         };
         
-        /** Updates the visual progress boxes (Set 1-5) based on current setProgress array. */
         const updateSetBoxes = () => {
             setProgress.forEach((reps, index) => {
                 const box = setBoxes[index];
                 const counterElement = box.querySelector('.set-rep-counter');
                 const checkmarkElement = box.querySelector('.checkmark-container');
-                
                 counterElement.textContent = reps;
                 box.classList.remove('bg-gray-500', 'bg-gray-900', 'bg-green-500');
-
                 if (reps === 0) {
                     box.classList.add('bg-gray-500'); 
                     checkmarkElement.classList.add('hidden');
@@ -534,20 +541,13 @@
                     checkmarkElement.classList.add('hidden');
                 } else if (reps === 5) {
                     box.classList.add('bg-green-500'); 
-                    checkmarkElement.classList.remove('hidden'); // Show checkmark when count is 5
+                    checkmarkElement.classList.remove('hidden');
                 }
             });
         };
 
-
-        // --- Timer Logic ---
-
-        /** Updates the UI for the timer value and pulse ring. */
         const updateUI = (phase, remainingTimeS) => {
-            // Update timer value (formatted to show only whole seconds)
             timerValue.textContent = Math.ceil(remainingTimeS).toString();
-
-            // Update pulse ring and shadow
             const isCriticalPhase = (phase === SUB_PHASE.EXHALE || phase === SUB_PHASE.INHALE);
             if (isCriticalPhase) {
                 pulseRing.classList.remove('hidden');
@@ -562,39 +562,39 @@
             }
         };
 
-        /** Stops and resets the timer session. */
-        const resetSession = (isCompleted = false) => {
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = null;
-            }
-            
-            // Release Wake Lock
+        const finishSession = () => {
+            if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
             releaseWakeLock();
+            
+            setStatusText('Success', TIMER_STATE.IDLE);
+            statusText.className = `text-5xl font-extrabold mb-2 h-14 flex items-center justify-center text-primary`;
+            showCelebration();
+            activeControls.classList.add('hidden');
+            
+            setTimeout(() => {
+                resetSession(false);
+            }, 5000);
+        };
 
+        const resetSession = (isCompleted = false) => {
+            if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
+            releaseWakeLock();
             currentState = TIMER_STATE.IDLE;
             repCount = 0;
             timeRemainingWhenPaused = 0;
             setProgress = [0, 0, 0, 0, 0];
-            lastPlayedSubPhase = null; // Reset audio tracker
-            sessionStartTime = 0; // Reset session start time
+            lastPlayedSubPhase = null;
+            sessionStartTime = 0;
             
-            // --- UI Reset: Show Setup Screen, Hide Workout Screen ---
             workoutScreen.classList.add('hidden');
             startScreen.classList.remove('hidden');
-            
-            // Show start button on setup screen
             startButton.classList.remove('hidden');
-            
-            // Hide active controls
             activeControls.classList.add('hidden');
 
             if (isCompleted) {
-                // SESSION COMPLETE message (two lines, large font)
                 setStatusText('Session<br>Complete!', TIMER_STATE.IDLE);
-                showCelebration(); // <-- Show confetti for celebration!
+                showCelebration();
             } else {
-                // Reset message or Initial Instructions
                 setStatusText('Ready', TIMER_STATE.IDLE);
             }
             
@@ -603,307 +603,176 @@
             pulseRing.classList.remove('timer-ring-active');
             timerContainer.classList.remove('border-primary');
             timerValue.classList.remove('text-primary');
-            
-            // Update total time display to show initial duration
             totalTimeValue.textContent = formatTime(totalSessionDurationMs);
-
-            updateSetBoxes(); // Resets set boxes visually
+            updateSetBoxes();
         };
 
-        /** Transitions the state machine to the next major phase. */
         const nextState = () => {
             let nextPhase;
-
-            // This function only handles transitions when the current phase's timer naturally expires.
             switch (currentState) {
                 case TIMER_STATE.ACTIVE_REP:
-                    // This is reached only after Reps 1, 2, 3, 4 fully complete the 15s/30s duration.
-                    nextPhase = TIMER_STATE.ACTIVE_REP;
-                    break;
-                case TIMER_STATE.LONG_BREAK:
-                    // This is reached after Sets 1, 2, 3, 4 complete the 60s break.
-                    nextPhase = TIMER_STATE.ACTIVE_REP;
-                    break;
-                case TIMER_STATE.IDLE: // Start from ACTIVE_REP
-                    nextPhase = TIMER_STATE.ACTIVE_REP;
-                    break;
-                default:
-                    resetSession();
-                    return;
-            }
-
-            currentState = nextPhase;
-            phaseStartTime = Date.now();
-            lastPlayedSubPhase = null; // Ensure audio chime plays immediately in the next phase
-            
-            // Set Status Text immediately for the new major phase
-            if (currentState === TIMER_STATE.LONG_BREAK) {
-                const completedSet = repCount / 5; 
-                const breakMessage = `Long Rest<br><span class="text-xl font-normal">(Set ${completedSet} Complete)</span>`; 
-                setStatusText(breakMessage, currentState);
-            } 
-            
-            // Start time remaining update
-            updateUI(currentState, PHASE_DURATIONS_MS[currentState] / 1000); 
-        };
-
-        /** Updates the status bar dynamically during the ACTIVE_REP phase. */
-        const updateActiveRepStatus = (elapsedMs) => {
-            let subPhase;
-            
-            if (elapsedMs < 1000) {
-                subPhase = SUB_PHASE.INHALE;
-            } else if (elapsedMs < 3000) { // EXHALE now runs for 2 seconds (from 1000ms to 3000ms)
-                subPhase = SUB_PHASE.EXHALE;
-            } else {
-                subPhase = SUB_PHASE.REST;
-                
-                // --- INCREMENT COUNTER AND EARLY TRANSITION LOGIC (at 3000ms) ---
-                // Check if we just transitioned INTO the REST phase (at 3000ms)
-                if (lastPlayedSubPhase !== SUB_PHASE.REST) {
-                    
                     repCount++; 
                     const currentSetIndex = Math.floor((repCount - 1) / 5); 
                     const currentRepInSet = (repCount % 5) || 5;
+                    if (currentSetIndex < 5) { setProgress[currentSetIndex] = currentRepInSet; updateSetBoxes(); }
+
+                    if (repCount >= 25) { finishSession(); return; } 
+                    else if (repCount % 5 === 0) { nextPhase = TIMER_STATE.LONG_BREAK; } 
+                    else { nextPhase = TIMER_STATE.ACTIVE_REP; }
+                    break;
+                case TIMER_STATE.LONG_BREAK:
+                    nextPhase = TIMER_STATE.ACTIVE_REP;
+                    break;
+                case TIMER_STATE.IDLE:
+                    nextPhase = TIMER_STATE.ACTIVE_REP;
+                    break;
+                default: resetSession(); return;
+            }
+            currentState = nextPhase;
+            phaseStartTime = Date.now();
+            lastPlayedSubPhase = null;
+            
+            if (currentState === TIMER_STATE.LONG_BREAK) {
+                const completedSet = repCount / 5; 
+                const breakMessage = `Long Rest (Set ${completedSet} Complete)`; 
+                setStatusText(breakMessage, currentState);
+            } 
+            updateUI(currentState, PHASE_DURATIONS_MS[currentState] / 1000); 
+        };
+
+        const updateActiveRepStatus = (elapsedMs) => {
+            let subPhase;
+            if (elapsedMs < 1000) { subPhase = SUB_PHASE.INHALE; } 
+            else if (elapsedMs < 3000) { subPhase = SUB_PHASE.EXHALE; } 
+            else {
+                subPhase = SUB_PHASE.REST;
+                if (lastPlayedSubPhase !== SUB_PHASE.REST) {
+                    repCount++; 
+                    const currentSetIndex = Math.floor((repCount - 1) / 5); 
+                    const currentRepInSet = (repCount % 5) || 5;
+                    if (currentSetIndex < 5) { setProgress[currentSetIndex] = currentRepInSet; updateSetBoxes(); }
                     
-                    if (currentSetIndex < 5) {
-                        setProgress[currentSetIndex] = currentRepInSet; 
-                        updateSetBoxes(); // Update UI immediately (Reps/Checkmark)
-                    }
-                    
-                    // Check for immediate transition (End of Set or End of Session)
                     if (repCount % 5 === 0) {
-                        // This is the 5th rep of a set (repCount = 5, 10, 15, 20, 25)
-                        
                         cancelAnimationFrame(animationFrameId);
                         animationFrameId = null;
-                        
-                        // If it's the final rep of the entire session (rep 25)
-                        if (repCount >= 25) {
-                            resetSession(true); // Session Complete immediately
-                            return;
-                        } 
-                        
-                        // If it's rep 5, 10, 15, or 20, go straight to Long Break
+                        if (repCount >= 25) { finishSession(); return; } 
                         if (repCount < 25) {
-                            // Force the transition to LONG_BREAK
                             currentState = TIMER_STATE.LONG_BREAK;
                             phaseStartTime = Date.now();
                             lastPlayedSubPhase = null;
-                            
                             const completedSet = repCount / 5; 
-                            const breakMessage = `Long Rest<br><span class="text-xl font-normal">(Set ${completedSet} Complete)</span>`; 
+                            const breakMessage = `Long Rest (Set ${completedSet} Complete)`; 
                             setStatusText(breakMessage, currentState);
-                            
                             updateUI(currentState, PHASE_DURATIONS_MS[currentState] / 1000); 
-                            
-                            // The main tick loop will continue from here
                             requestAnimationFrame(tick);
                             return;
                         }
                     }
                 }
-                // --- END INCREMENT COUNTER AND EARLY TRANSITION LOGIC ---
             }
-            
             playTransitionChime(subPhase);
-
-            // Determine display text based on subPhase
             let displayText;
-            if (subPhase === SUB_PHASE.EXHALE) {
-                // Use detailed instruction for exhale
-                displayText = EXHALE_INSTRUCTIONS;
-            } else if (subPhase === SUB_PHASE.REST) {
-                // Use dynamic rest label
-                displayText = currentRestLabel;
-            } else {
-                // Use short label for inhale
-                displayText = SUB_PHASE.INHALE;
-            }
-
+            if (subPhase === SUB_PHASE.EXHALE) { displayText = EXHALE_INSTRUCTIONS; } 
+            else if (subPhase === SUB_PHASE.REST) { displayText = currentRestLabel; } 
+            else { displayText = SUB_PHASE.INHALE; }
             setStatusText(displayText, subPhase);
         };
 
-
-        /** The main animation loop (called by requestAnimationFrame). */
         const tick = () => {
             if (currentState === TIMER_STATE.IDLE || currentState === TIMER_STATE.PAUSED) return;
-
             const now = Date.now();
             const elapsed = now - phaseStartTime;
-            
             const duration = PHASE_DURATIONS_MS[currentState];
             let remaining = duration - elapsed;
             
-            if (remaining <= 0) {
-                nextState();
-            } else {
-                const remainingSeconds = remaining / 1000;
-                updateUI(currentState, remainingSeconds);
-
-                // Handle status updates within the ACTIVE_REP state
-                if (currentState === TIMER_STATE.ACTIVE_REP) {
-                    updateActiveRepStatus(elapsed);
-                }
+            if (remaining <= 0) { nextState(); } 
+            else {
+                updateUI(currentState, remaining / 1000);
+                if (currentState === TIMER_STATE.ACTIVE_REP) { updateActiveRepStatus(elapsed); }
             }
-
-            // --- Total Session Time Remaining Logic ---
             const totalElapsed = now - sessionStartTime;
             let totalRemaining = totalSessionDurationMs - totalElapsed;
-            
             if (totalRemaining < 0) totalRemaining = 0;
             totalTimeValue.textContent = formatTime(totalRemaining);
-
             animationFrameId = requestAnimationFrame(tick);
         };
 
-        /** Starts the timer session from IDLE state. */
         const startSession = () => {
             if (currentState !== TIMER_STATE.IDLE) return;
-            
             initAudio(); 
-            requestWakeLock(); // <-- ACQUIRE WAKE LOCK ON START
-            
-            // --- UI Transition: Hide Setup Screen, Show Workout Screen ---
+            requestWakeLock(); 
             startScreen.classList.add('hidden');
             workoutScreen.classList.remove('hidden');
-            
-            // UI setup for workout
             activeControls.classList.remove('hidden');
             pauseResumeButton.textContent = 'Pause Session';
             pauseResumeButton.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
             pauseResumeButton.classList.add('bg-red-600', 'hover:bg-red-700');
-
-            // Set session start time
             sessionStartTime = Date.now(); 
-            
-            // Start state machine
             nextState(); 
-            
-            // Start the loop
             animationFrameId = requestAnimationFrame(tick);
         };
 
-        /** Pauses the timer. */
         const pauseTimer = () => {
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = null;
-            }
-            
-            // Release Wake Lock
+            if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
             releaseWakeLock();
-
             const elapsedSincePhaseStart = Date.now() - phaseStartTime;
             const duration = PHASE_DURATIONS_MS[currentState];
             timeRemainingWhenPaused = duration - elapsedSincePhaseStart;
-            
             activeStateBeforePause = currentState; 
             currentState = TIMER_STATE.PAUSED;
-            lastPlayedSubPhase = null; // Reset audio tracker
-
-            // UI update for pause
+            lastPlayedSubPhase = null; 
             pauseResumeButton.textContent = 'Resume Session';
             pauseResumeButton.classList.remove('bg-red-600', 'hover:bg-red-700');
             pauseResumeButton.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
-            
-            // Display pause instruction text
             setStatusText(PAUSE_INSTRUCTIONS, TIMER_STATE.PAUSED);
-            
-            // Display the time remaining when paused (current phase)
             updateUI(currentState, timeRemainingWhenPaused / 1000);
-            
-            // Update total time display for pause state
             const totalElapsed = Date.now() - sessionStartTime;
             let totalRemaining = totalSessionDurationMs - totalElapsed;
             if (totalRemaining < 0) totalRemaining = 0;
             totalTimeValue.textContent = formatTime(totalRemaining);
         };
 
-        /** Resumes the timer. */
         const resumeTimer = () => {
             currentState = activeStateBeforePause; 
-            requestWakeLock(); // <-- ACQUIRE WAKE LOCK ON RESUME
-
+            requestWakeLock(); 
             const duration = PHASE_DURATIONS_MS[currentState];
-            
             phaseStartTime = Date.now() - (duration - timeRemainingWhenPaused); 
             timeRemainingWhenPaused = 0; 
-
-            // UI update for resume
             pauseResumeButton.textContent = 'Pause Session';
             pauseResumeButton.classList.add('bg-red-600', 'hover:bg-red-700');
             pauseResumeButton.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
             
-            // Recalculate and set the status text immediately
             if (currentState === TIMER_STATE.LONG_BREAK) {
                  const completedSet = repCount / 5; 
-                 const breakMessage = `Long Rest<br><span class="text-xl font-normal">(Set ${completedSet} Complete)</span>`; 
+                 const breakMessage = `Long Rest (Set ${completedSet} Complete)`; 
                  setStatusText(breakMessage, currentState);
             } else if (currentState === TIMER_STATE.ACTIVE_REP) {
-                 // Calculate elapsed time since phase start to determine the sub-phase
                  const elapsed = Date.now() - phaseStartTime;
                  updateActiveRepStatus(elapsed);
             }
-
-            // Restart the loop
             animationFrameId = requestAnimationFrame(tick);
-            
-            const remainingSeconds = (duration - (Date.now() - phaseStartTime)) / 1000;
-            updateUI(currentState, remainingSeconds);
+            updateUI(currentState, (duration - (Date.now() - phaseStartTime)) / 1000);
         };
 
-
-        // --- Event Listeners and Initialization ---
-
-        startButton.addEventListener('click', () => {
-            if (currentState === TIMER_STATE.IDLE) {
-                startSession();
-            }
-        });
-
+        startButton.addEventListener('click', () => { if (currentState === TIMER_STATE.IDLE) startSession(); });
         pauseResumeButton.addEventListener('click', () => {
-            if (currentState === TIMER_STATE.PAUSED) {
-                resumeTimer();
-            } else if (currentState !== TIMER_STATE.IDLE) {
-                pauseTimer();
-            }
+            if (currentState === TIMER_STATE.PAUSED) resumeTimer();
+            else if (currentState !== TIMER_STATE.IDLE) pauseTimer();
         });
-
         resetButton.addEventListener('click', () => {
             if (currentState !== TIMER_STATE.IDLE) {
                 wasRunningBeforeModal = (currentState !== TIMER_STATE.PAUSED);
-
-                if (wasRunningBeforeModal) {
-                    pauseTimer(); 
-                }
-                
+                if (wasRunningBeforeModal) pauseTimer(); 
                 openResetModal();
             }
         });
+        confirmResetButton.addEventListener('click', () => { resetSession(false); closeResetModal(); wasRunningBeforeModal = false; });
+        cancelResetButton.addEventListener('click', () => { closeResetModal(); if (wasRunningBeforeModal) resumeTimer(); wasRunningBeforeModal = false; });
 
-        confirmResetButton.addEventListener('click', () => {
-            resetSession(false);
-            closeResetModal();
-            wasRunningBeforeModal = false;
-        });
-        
-        cancelResetButton.addEventListener('click', () => {
-            closeResetModal();
-            if (wasRunningBeforeModal) {
-                resumeTimer();
-            }
-            wasRunningBeforeModal = false;
-        });
-
-        // Initialization: Set the default duration and initial instructions
         window.handleRestDurationChange('15'); 
-        
-        // Initial setup for the UI
-        setStatusText('Ready', TIMER_STATE.IDLE);
+        setStatusText(INITIAL_INSTRUCTIONS, TIMER_STATE.IDLE);
         updateUI(TIMER_STATE.IDLE, 0);
         updateSetBoxes(); 
-
     </script>
 </body>
 </html>
