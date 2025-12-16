@@ -158,6 +158,13 @@
                             Reset Session
                         </button>
                     </div>
+
+                    <!-- New Session button: hidden by default and shown only when the session completes -->
+                    <div class="mt-4 flex justify-center">
+                        <button id="new-session-button" class="hidden px-6 py-3 text-lg font-semibold rounded-lg bg-primary hover:bg-secondary text-light-text transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-primary focus:ring-opacity-50 w-full max-w-xs">
+                            New Session
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -621,25 +628,46 @@
         };
 
         const finishSession = () => {
+            // Finalize and show the success screen (no auto-reset) — waits for user to click "New Session"
             if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
             releaseWakeLock();
-            
+
+            // Replace main instruction with a large SUCCESS label
             setStatusText('Success', TIMER_STATE.IDLE);
-            statusText.className = `text-5xl font-extrabold mb-2 h-14 flex items-center justify-center text-primary`;
+            // Enforce a large, prominent style for the success message
+            statusText.classList.add('text-5xl', 'font-extrabold', 'h-14');
+
+            // Hide all numeric counters for a clean success display
+            /*
+            document.querySelectorAll('.set-rep-counter').forEach(el => {
+                el.classList.add('hidden');
+                el.setAttribute('aria-hidden', 'true');
+            });
+            */
+
+            // Ensure all completed sets show their checkmark (updateSetBoxes handles visibility logic)
+            updateSetBoxes();
+
+            // Show celebration animation
             showCelebration();
+
+            // Hide regular active controls (pause/reset) and show the "New Session" button
             activeControls.classList.add('hidden');
-            
+            const newSessionButton = document.getElementById('new-session-button');
+            if (newSessionButton) newSessionButton.classList.remove('hidden');
+
             // Clear the Time Remaining display on success
             totalTimeValue.textContent = "0:00";
 
-            setTimeout(() => {
-                resetSession(false);
-            }, 5000);
+            // Do NOT auto-reset; the UI should remain in the success state until the user clicks New Session
         };
 
         const resetSession = (isCompleted = false) => {
+            // Stop any running animation and clear wake locks
             if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
             releaseWakeLock();
+
+            // Reset runtime state
             currentState = TIMER_STATE.IDLE;
             repCount = 0;
             timeRemainingWhenPaused = 0;
@@ -648,10 +676,21 @@
             lastPlayedSubPhase = null;
             sessionStartTime = 0;
             
+            // Switch to the setup/start screen
             workoutScreen.classList.add('hidden');
             startScreen.classList.remove('hidden');
             startButton.classList.remove('hidden');
             activeControls.classList.add('hidden');
+
+            // Hide the New Session button if it was visible
+            const newSessionButton = document.getElementById('new-session-button');
+            if (newSessionButton) newSessionButton.classList.add('hidden');
+
+            // Restore counters visibility (undo finishSession's hiding)
+            document.querySelectorAll('.set-rep-counter').forEach(el => {
+                el.classList.remove('hidden');
+                el.removeAttribute('aria-hidden');
+            });
 
             if (isCompleted) {
                 setStatusText('Session<br>Complete!', TIMER_STATE.IDLE);
@@ -660,6 +699,7 @@
                 setStatusText('Ready', TIMER_STATE.IDLE);
             }
             
+            // Reset UI visuals
             timerValue.textContent = '0';
             pulseRing.classList.add('hidden');
             pulseRing.classList.remove('timer-ring-active');
@@ -863,6 +903,15 @@
         });
         confirmResetButton.addEventListener('click', () => { resetSession(false); closeResetModal(); wasRunningBeforeModal = false; });
         cancelResetButton.addEventListener('click', () => { closeResetModal(); if (wasRunningBeforeModal) resumeTimer(); wasRunningBeforeModal = false; });
+
+        // Handle the New Session button (appears only after successful completion)
+        const newSessionButton = document.getElementById('new-session-button');
+        if (newSessionButton) {
+            newSessionButton.addEventListener('click', () => {
+                // Reset back to the start/setup state when user requests a new session
+                resetSession(false);
+            });
+        }
 
         window.handleRestDurationChange('15'); 
         setStatusText(INITIAL_INSTRUCTIONS, TIMER_STATE.IDLE);
