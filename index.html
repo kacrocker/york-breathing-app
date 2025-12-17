@@ -174,62 +174,71 @@
                 <div id="set-progress-container" class="grid grid-cols-5 gap-3">
                     
                     <!-- Set Box 1 -->
-                    <div id="set-box-1" class="set-box relative p-1 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
+                    <div id="set-box-1" class="set-box p-1 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
                         <div class="text-xs font-medium text-light-text opacity-70">Set 1</div>
-                        <div class="set-rep-counter text-lg font-bold text-light-text">0</div>
-                        <!-- Checkmark -->
-                        <div class="checkmark-container hidden absolute top-1 right-1">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                            </svg>
+                        <!--
+                            Count row: wraps the numeric counter and the checkmark so the checkmark appears
+                            directly to the right of the number when a set is completed.
+                        -->
+                        <div class="count-row mt-1 flex items-center justify-center">
+                            <div class="set-rep-counter text-lg font-bold text-light-text">0</div>
+                            <div class="checkmark-container hidden ml-2 inline-flex items-center" aria-hidden="true">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
                         </div>
                     </div>
                     
                     <!-- Set Box 2 -->
-                    <div id="set-box-2" class="set-box relative p-1 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
+                    <div id="set-box-2" class="set-box p-1 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
                         <div class="text-xs font-medium text-light-text opacity-70">Set 2</div>
-                        <div class="set-rep-counter text-lg font-bold text-light-text">0</div>
-                        <!-- Checkmark -->
-                        <div class="checkmark-container hidden absolute top-1 right-1">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                            </svg>
+                        <div class="count-row mt-1 flex items-center justify-center">
+                            <div class="set-rep-counter text-lg font-bold text-light-text">0</div>
+                            <div class="checkmark-container hidden ml-2 inline-flex items-center" aria-hidden="true">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
                         </div>
                     </div>
                     
                     <!-- Set Box 3 -->
-                    <div id="set-box-3" class="set-box relative p-1 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
+                    <div id="set-box-3" class="set-box p-1 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
                         <div class="text-xs font-medium text-light-text opacity-70">Set 3</div>
-                        <div class="set-rep-counter text-lg font-bold text-light-text">0</div>
-                        <!-- Checkmark -->
-                        <div class="checkmark-container hidden absolute top-1 right-1">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                            </svg>
+                        <div class="count-row mt-1 flex items-center justify-center">
+                            <div class="set-rep-counter text-lg font-bold text-light-text">0</div>
+                            <div class="checkmark-container hidden ml-2 inline-flex items-center" aria-hidden="true">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Set Box 4 -->
-                    <div id="set-box-4" class="set-box relative p-1 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
+                    <div id="set-box-4" class="set-box p-1 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
                         <div class="text-xs font-medium text-light-text opacity-70">Set 4</div>
-                        <div class="set-rep-counter text-lg font-bold text-light-text">0</div>
-                        <!-- Checkmark -->
-                        <div class="checkmark-container hidden absolute top-1 right-1">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                            </svg>
+                        <div class="count-row mt-1 flex items-center justify-center">
+                            <div class="set-rep-counter text-lg font-bold text-light-text">0</div>
+                            <div class="checkmark-container hidden ml-2 inline-flex items-center" aria-hidden="true">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Set Box 5 -->
-                    <div id="set-box-5" class="set-box relative p-1 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
+                    <div id="set-box-5" class="set-box p-1 rounded-lg text-center bg-gray-500 transition-colors duration-300 shadow-xl">
                         <div class="text-xs font-medium text-light-text opacity-70">Set 5</div>
-                        <div class="set-rep-counter text-lg font-bold text-light-text">0</div>
-                        <!-- Checkmark -->
-                        <div class="checkmark-container hidden absolute top-1 right-1">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                            </svg>
+                        <div class="count-row mt-1 flex items-center justify-center">
+                            <div class="set-rep-counter text-lg font-bold text-light-text">0</div>
+                            <div class="checkmark-container hidden ml-2 inline-flex items-center" aria-hidden="true">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -597,7 +606,7 @@
                 const counterElement = box.querySelector('.set-rep-counter');
                 const checkmarkElement = box.querySelector('.checkmark-container');
                 counterElement.textContent = reps;
-                box.classList.remove('bg-gray-500', 'bg-gray-900', 'bg-green-500');
+                box.classList.remove('bg-gray-500', 'bg-gray-900', 'bg-primary');
                 if (reps === 0) {
                     box.classList.add('bg-gray-500'); 
                     checkmarkElement.classList.add('hidden');
@@ -605,7 +614,7 @@
                     box.classList.add('bg-gray-900'); 
                     checkmarkElement.classList.add('hidden');
                 } else if (reps === 5) {
-                    box.classList.add('bg-green-500'); 
+                    box.classList.add('bg-primary'); 
                     checkmarkElement.classList.remove('hidden');
                 }
             });
