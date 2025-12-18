@@ -339,7 +339,7 @@
         // User-facing instructional text (easy to edit)
         const INITIAL_INSTRUCTIONS = "Please make sure your sound is ON and the volume is turned up. Then press \"Start Session\" to begin. Focus on inhaling deeply and exhaling forcefully and quickly against the device's resistance.";
         const EXHALE_INSTRUCTIONS = 'Exhale Quickly';
-        const PAUSE_INSTRUCTIONS = "Session Paused. Click 'Resume' to Continue.";
+        const PAUSE_INSTRUCTIONS = "Session Paused.<br>Click 'Resume' to Continue.";
 
         // Phase duration map: controls how many milliseconds each top-level state lasts
         const PHASE_DURATIONS_MS = {
@@ -357,7 +357,7 @@
         const PHASE_COLOR_CLASS = {
             [SUB_PHASE.INHALE]: 'text-cyan-400',
             [SUB_PHASE.EXHALE]: 'text-red-500',
-            [SUB_PHASE.REST]: 'text-primary',
+            [SUB_PHASE.REST]: 'text-white',
             [TIMER_STATE.LONG_BREAK]: 'text-yellow-400',
             [TIMER_STATE.PAUSED]: 'text-yellow-500',
             [TIMER_STATE.IDLE]: 'text-white'
@@ -516,7 +516,7 @@
             if (text.length > 25 || text.includes('<br>')) {
                 // For long messages/instructions/breaks
                 statusText.classList.add('text-lg', 'font-semibold'); 
-                statusText.classList.remove('text-3xl'); 
+                statusText.classList.remove('text-2xl'); 
             } else {
                 // For short phase names (e.g., Inhale Deeply, Paused, Ready)
                 statusText.classList.add('text-2xl'); 
@@ -600,8 +600,8 @@
             gainNode.connect(audioContext.destination);
             oscillator.type = 'sine';
             oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-            // Updated gain to 1.0 for louder sound
-            gainNode.gain.setValueAtTime(1.0, audioContext.currentTime);
+            // Updated gain to 1.0 for louder sound - Testing at 5
+            gainNode.gain.setValueAtTime(5, audioContext.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
             oscillator.start();
             oscillator.stop(audioContext.currentTime + duration);
