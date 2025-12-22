@@ -60,12 +60,20 @@
 
         .confetti {
             position: absolute;
+            /* Start above the viewport so translateY animation clearly moves particles into view */
+            top: -10vh;
             width: 8px;
             height: 8px;
             border-radius: 50%;
             opacity: 0;
-            animation: confetti-fall linear infinite;
+            /* Use the confetti-fall keyframes, run each particle once, and keep final state until removed */
+            animation-name: confetti-fall;
+            animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+            animation-iteration-count: 1;
+            animation-fill-mode: forwards;
             z-index: 1000;
+            will-change: transform, opacity;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -93,7 +101,7 @@
         <div id="setup-screen" class="flex flex-col items-center justify-center space-y-6">
             
             <!-- Instructions and Duration Selector -->
-            <div id="rest-duration-selector" class="w-full mb-6 p-4 bg-gray-800 rounded-lg text-sm text-gray-300 border-l-4 border-gray-600">
+            <div id="rest-duration-selector" class="w-full p-4 bg-gray-800 rounded-lg text-sm text-gray-300 border-l-4 border-gray-600">
                 <label class="block text-md font-semibold text-gray-100 mb-2">Select Rest Phase Duration:</label>
                 <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-6">
                     <div class="flex-1 bg-primary text-white rounded-lg p-3 cursor-pointer text-center font-bold transition-colors duration-200 shadow-md border-2 border-primary"
@@ -109,7 +117,7 @@
             
             <!-- Initial Instruction Message -->
             <div class="text-center w-full">
-                 <div id="initial-instruction-text" class="text-base font-semibold text-gray-300 mb-6 px-4">
+                 <div id="initial-instruction-text" class="text-base font-semibold text-gray-300 sm:mb-2 px-4">
                     Please make sure your sound is ON and the volume is turned up. Then press "Start Session" to begin. Focus on inhaling deeply and exhaling forcefully and quickly against the device's resistance.
                  </div>
             </div>
@@ -144,26 +152,40 @@
                     </div>
                 </div>
 
-                <!-- Controls (Now stacked vertically on the right) -->
-                <div class="mt-4 sm:mt-0 flex flex-col justify-center space-y-4 w-full sm:w-1/3 sm:min-w-max">
+                <!-- Controls (responsive):
+                     - Mobile (default): controls appear in a single row beneath the timer
+                     - Desktop (sm and up): controls stack vertically to the right of the timer
+                     - When the round timer is hidden (success), JS will add `mx-auto` so the controls are centered
+                -->
+                <div id="controls-wrapper" class="mt-4 sm:mt-0 flex flex-row items-center justify-center gap-3 w-full sm:flex-col sm:justify-center sm:space-y-4 sm:w-1/3 sm:min-w-max">
                     
                     <!-- Dynamic Active/Paused Controls -->
-                    <div id="active-controls" class="flex flex-col space-y-4">
+                    <div id="active-controls" class="flex flex-row items-center gap-3 sm:flex-col sm:space-y-4">
                         <button id="pause-resume-button" 
-                                class="px-6 py-3 text-lg font-semibold rounded-lg bg-red-600 hover:bg-red-700 text-light-text transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-red-600 focus:ring-opacity-50 w-full">
-                            Pause Session
+                                class="px-6 py-3 text-lg font-semibold rounded-lg bg-red-600 hover:bg-red-700 text-light-text transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-red-600 focus:ring-opacity-50 w-auto sm:w-full">
+                            Pause
                         </button>
                         <button id="reset-button" 
-                                class="px-6 py-3 text-lg font-semibold rounded-lg bg-gray-500 hover:bg-gray-600 text-light-text transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-gray-500 focus:ring-opacity-50 w-full">
-                            Reset Session
+                                class="px-6 py-3 text-lg font-semibold rounded-lg bg-gray-500 hover:bg-gray-600 text-light-text transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-gray-500 focus:ring-opacity-50 w-auto sm:w-full">
+                            Reset
+                        </button>
+                    </div>
+
+                    <!-- New Session button: hidden by default and shown only when the session completes -->
+                    <div class="mt-0 sm:mt-4 flex justify-center">
+                        <button id="new-session-button" class="hidden px-6 py-3 text-lg font-semibold rounded-lg bg-primary hover:bg-secondary text-light-text transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-primary focus:ring-opacity-50 w-auto sm:w-full max-w-xs">
+                            New Session
                         </button>
                     </div>
                 </div>
             </div>
 
             <!-- Set Progress Status Boxes -->
-            <div class="mt-4 pt-4 border-t border-gray-600">
-                <h3 class="text-lg font-semibold text-gray-300 mb-4 text-center">Set Progress (Breathes Completed)</h3>
+            <div class="mt-4 sm:mt-2 pt-4 border-t border-gray-600">
+                <h3 class="text-lg font-semibold text-gray-300 mb-4 text-center">
+                    <span class="sm:hidden">Set Progress</span>
+                    <span class="hidden sm:inline">Set Progress (Breathes Completed)</span>
+                </h3>
                 <div id="set-progress-container" class="grid grid-cols-5 gap-3">
                     
                     <!-- Set Box 1 -->
@@ -317,7 +339,7 @@
         // User-facing instructional text (easy to edit)
         const INITIAL_INSTRUCTIONS = "Please make sure your sound is ON and the volume is turned up. Then press \"Start Session\" to begin. Focus on inhaling deeply and exhaling forcefully and quickly against the device's resistance.";
         const EXHALE_INSTRUCTIONS = 'Exhale Quickly';
-        const PAUSE_INSTRUCTIONS = "Session Paused. Click 'Resume Session' to Continue.";
+        const PAUSE_INSTRUCTIONS = "Session Paused.<br>Click 'Resume' to Continue.";
 
         // Phase duration map: controls how many milliseconds each top-level state lasts
         const PHASE_DURATIONS_MS = {
@@ -335,7 +357,7 @@
         const PHASE_COLOR_CLASS = {
             [SUB_PHASE.INHALE]: 'text-cyan-400',
             [SUB_PHASE.EXHALE]: 'text-red-500',
-            [SUB_PHASE.REST]: 'text-green-400',
+            [SUB_PHASE.REST]: 'text-white',
             [TIMER_STATE.LONG_BREAK]: 'text-yellow-400',
             [TIMER_STATE.PAUSED]: 'text-yellow-500',
             [TIMER_STATE.IDLE]: 'text-white'
@@ -494,7 +516,7 @@
             if (text.length > 25 || text.includes('<br>')) {
                 // For long messages/instructions/breaks
                 statusText.classList.add('text-lg', 'font-semibold'); 
-                statusText.classList.remove('text-3xl'); 
+                statusText.classList.remove('text-2xl'); 
             } else {
                 // For short phase names (e.g., Inhale Deeply, Paused, Ready)
                 statusText.classList.add('text-2xl'); 
@@ -578,8 +600,8 @@
             gainNode.connect(audioContext.destination);
             oscillator.type = 'sine';
             oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-            // Updated gain to 1.0 for louder sound
-            gainNode.gain.setValueAtTime(1.0, audioContext.currentTime);
+            // Updated gain to 1.0 for louder sound - Testing at 5
+            gainNode.gain.setValueAtTime(5, audioContext.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
             oscillator.start();
             oscillator.stop(audioContext.currentTime + duration);
@@ -599,7 +621,7 @@
                 const counterElement = box.querySelector('.set-rep-counter');
                 const checkmarkElement = box.querySelector('.checkmark-container');
                 counterElement.textContent = reps;
-                box.classList.remove('bg-gray-500', 'bg-gray-900', 'bg-green-500');
+                box.classList.remove('bg-gray-500', 'bg-gray-900', 'bg-primary');
                 if (reps === 0) {
                     box.classList.add('bg-gray-500'); 
                     checkmarkElement.classList.add('hidden');
@@ -607,7 +629,7 @@
                     box.classList.add('bg-gray-900'); 
                     checkmarkElement.classList.add('hidden');
                 } else if (reps === 5) {
-                    box.classList.add('bg-green-500'); 
+                    box.classList.add('bg-primary'); 
                     checkmarkElement.classList.remove('hidden');
                 }
             });
@@ -630,25 +652,52 @@
         };
 
         const finishSession = () => {
+            // Finalize and show the success screen (no auto-reset) — waits for user to click "New Session"
             if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
             releaseWakeLock();
-            
+
+            // Replace main instruction with a large SUCCESS label
             setStatusText('Success', TIMER_STATE.IDLE);
-            statusText.className = `text-5xl font-extrabold mb-2 h-14 flex items-center justify-center text-primary`;
+            // Enforce a large, prominent style for the success message
+            statusText.classList.add('text-5xl', 'font-extrabold', 'h-14');
+
+            // Hide the round timer display for a cleaner success screen
+            // (timerContainer references the inner circle element used for the large timer)
+            if (timerContainer) {
+                timerContainer.classList.add('hidden');
+                timerContainer.setAttribute('aria-hidden', 'true');
+            }
+
+            // Center controls (including New Session) when the timer is hidden
+            const controlsWrapper = document.getElementById('controls-wrapper');
+            if (controlsWrapper) {
+                // Use Tailwind utility classes via classList for centering
+                controlsWrapper.classList.add('mx-auto', 'items-center');
+            }
+
+            // Ensure all completed sets show their checkmark (updateSetBoxes handles visibility logic)
+            updateSetBoxes();
+
+            // Show celebration animation
             showCelebration();
+
+            // Hide regular active controls (pause/reset) and show the "New Session" button
             activeControls.classList.add('hidden');
-            
+            const newSessionButton = document.getElementById('new-session-button');
+            if (newSessionButton) newSessionButton.classList.remove('hidden');
+
             // Clear the Time Remaining display on success
             totalTimeValue.textContent = "0:00";
 
-            setTimeout(() => {
-                resetSession(false);
-            }, 5000);
+            // Do NOT auto-reset; the UI should remain in the success state until the user clicks New Session
         };
 
         const resetSession = (isCompleted = false) => {
+            // Stop any running animation and clear wake locks
             if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
             releaseWakeLock();
+
+            // Reset runtime state
             currentState = TIMER_STATE.IDLE;
             repCount = 0;
             timeRemainingWhenPaused = 0;
@@ -657,10 +706,33 @@
             lastPlayedSubPhase = null;
             sessionStartTime = 0;
             
+            // Switch to the setup/start screen
             workoutScreen.classList.add('hidden');
             startScreen.classList.remove('hidden');
             startButton.classList.remove('hidden');
             activeControls.classList.add('hidden');
+
+            // Hide the New Session button if it was visible
+            const newSessionButton = document.getElementById('new-session-button');
+            if (newSessionButton) newSessionButton.classList.add('hidden');
+
+            // Restore counters visibility (undo finishSession's hiding)
+            document.querySelectorAll('.set-rep-counter').forEach(el => {
+                el.classList.remove('hidden');
+                el.removeAttribute('aria-hidden');
+            });
+
+            // Restore the round timer display (unhide the main timer circle)
+            if (timerContainer) {
+                timerContainer.classList.remove('hidden');
+                timerContainer.removeAttribute('aria-hidden');
+            }
+
+            // Undo any centering applied for the success state so controls flow normally
+            const controlsWrapper = document.getElementById('controls-wrapper');
+            if (controlsWrapper) {
+                controlsWrapper.classList.remove('mx-auto', 'items-center');
+            }
 
             if (isCompleted) {
                 setStatusText('Session<br>Complete!', TIMER_STATE.IDLE);
@@ -669,6 +741,7 @@
                 setStatusText('Ready', TIMER_STATE.IDLE);
             }
             
+            // Reset UI visuals
             timerValue.textContent = '0';
             pulseRing.classList.add('hidden');
             pulseRing.classList.remove('timer-ring-active');
@@ -796,7 +869,7 @@
             startScreen.classList.add('hidden');
             workoutScreen.classList.remove('hidden');
             activeControls.classList.remove('hidden');
-            pauseResumeButton.textContent = 'Pause Session';
+            pauseResumeButton.textContent = 'Pause';
             pauseResumeButton.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
             pauseResumeButton.classList.add('bg-red-600', 'hover:bg-red-700');
             sessionStartTime = Date.now(); 
@@ -819,7 +892,7 @@
             activeStateBeforePause = currentState; 
             currentState = TIMER_STATE.PAUSED;
             lastPlayedSubPhase = null; 
-            pauseResumeButton.textContent = 'Resume Session';
+            pauseResumeButton.textContent = 'Resume';
             pauseResumeButton.classList.remove('bg-red-600', 'hover:bg-red-700');
             pauseResumeButton.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
             setStatusText(PAUSE_INSTRUCTIONS, TIMER_STATE.PAUSED);
@@ -842,7 +915,7 @@
             // New Start Time = Now - (TotalDuration - Remaining)
             sessionStartTime = Date.now() - (totalSessionDurationMs - sessionTimeRemainingWhenPaused);
 
-            pauseResumeButton.textContent = 'Pause Session';
+            pauseResumeButton.textContent = 'Pause';
             pauseResumeButton.classList.add('bg-red-600', 'hover:bg-red-700');
             pauseResumeButton.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
             
@@ -872,6 +945,15 @@
         });
         confirmResetButton.addEventListener('click', () => { resetSession(false); closeResetModal(); wasRunningBeforeModal = false; });
         cancelResetButton.addEventListener('click', () => { closeResetModal(); if (wasRunningBeforeModal) resumeTimer(); wasRunningBeforeModal = false; });
+
+        // Handle the New Session button (appears only after successful completion)
+        const newSessionButton = document.getElementById('new-session-button');
+        if (newSessionButton) {
+            newSessionButton.addEventListener('click', () => {
+                // Reset back to the start/setup state when user requests a new session
+                resetSession(false);
+            });
+        }
 
         window.handleRestDurationChange('15'); 
         setStatusText(INITIAL_INSTRUCTIONS, TIMER_STATE.IDLE);
