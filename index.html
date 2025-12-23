@@ -88,6 +88,24 @@
         
         /* Ensure ticks are slightly translucent */
         #progress-ring #phase-ticks line { opacity: 0.9; }
+
+        /* Mobile: make the timer circle larger (80% width) and keep it square */
+        @media (max-width: 639px) {
+            #timer-display-container {
+                width: 80% !important; /* 80% of parent on small screens */
+                max-width: 420px;      /* sensible cap so it doesn't grow too large on phablets */
+                aspect-ratio: 1 / 1;   /* keep square */
+                height: auto !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+            }
+            /* Ensure inner circle and SVG fill the available space */
+            #timer-display-container .relative.flex.flex-col {
+                width: 100% !important;
+                height: 100% !important;
+            }
+            #progress-ring { width: 100% !important; height: 100% !important; }
+        }
     </style>
 </head>
 <body class="bg-dark-bg font-sans text-light-text flex items-center justify-center p-4 min-h-screen">
