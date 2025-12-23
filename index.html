@@ -147,6 +147,8 @@
             
             <!-- Status Display (Handles all messages and instructions) -->
             <div class="text-center mb-4">
+                <!-- Phase labels row: shows Inhale / Exhale / Rest with colors; current is bold -->
+                <div id="phase-labels" class="mb-2 flex items-center justify-center gap-4"></div>
                 <div id="status-text" class="text-3xl font-extrabold mb-2 h-10 text-white flex items-center justify-center transition-colors duration-300">Ready</div>
             </div>
 
@@ -419,6 +421,7 @@
         const pauseResumeButton = document.getElementById('pause-resume-button');
         const resetButton = document.getElementById('reset-button');
         const statusText = document.getElementById('status-text');
+        const phaseLabels = document.getElementById('phase-labels');
         const timerValue = document.getElementById('timer-value');
         const pulseRing = document.getElementById('pulse-ring');
         const timerContainer = document.getElementById('timer-display-container').querySelector('.relative.flex.flex-col');
@@ -533,14 +536,14 @@
                 ];
                 setPhaseArcs(segments);
                 updateSweep(elapsedMs, PHASE_DURATIONS_MS[TIMER_STATE.ACTIVE_REP]);
-                // Color the sweep indicator to hint at the upcoming subphase
+                // Color the sweep indicator to match the current subphase
                 try {
                     const pos = elapsedMs;
-                    let upcomingClass = null;
-                    if (pos < inhaleMs) upcomingClass = PHASE_COLOR_CLASS[SUB_PHASE.EXHALE];
-                    else if (pos < inhaleMs + exhaleMs) upcomingClass = PHASE_COLOR_CLASS[SUB_PHASE.REST];
-                    else upcomingClass = PHASE_COLOR_CLASS[SUB_PHASE.INHALE];
-                    setSweepColorClass(upcomingClass);
+                    let currentClass = null;
+                    if (pos < inhaleMs) currentClass = PHASE_COLOR_CLASS[SUB_PHASE.INHALE];
+                    else if (pos < inhaleMs + exhaleMs) currentClass = PHASE_COLOR_CLASS[SUB_PHASE.EXHALE];
+                    else currentClass = PHASE_COLOR_CLASS[SUB_PHASE.REST];
+                    setSweepColorClass(currentClass);
                 } catch (e) { /* ignore */ }
             } else if (state === TIMER_STATE.LONG_BREAK) {
                 const segments = [{ name: 'long', ms: PHASE_DURATIONS_MS[TIMER_STATE.LONG_BREAK], className: PHASE_COLOR_CLASS[TIMER_STATE.LONG_BREAK] }];
@@ -606,6 +609,34 @@
             
             return `${pad(minutes)}:${pad(seconds)}`;
         };
+
+        // Short labels used for the phase label row above the timer
+        const SHORT_PHASE_LABEL = {
+            [SUB_PHASE.INHALE]: 'Inhale',
+            [SUB_PHASE.EXHALE]: 'Exhale',
+            [SUB_PHASE.REST]: 'Rest',
+        };
+
+        const renderPhaseLabels = (currentSubPhase) => {
+            if (!phaseLabels) return;
+            // Only render labels while in an ACTIVE_REP
+            if (currentState !== TIMER_STATE.ACTIVE_REP) {
+                phaseLabels.innerHTML = '';
+                return;
+            }
+
+            const phases = [SUB_PHASE.INHALE, SUB_PHASE.EXHALE, SUB_PHASE.REST];
+            phaseLabels.innerHTML = phases.map((p) => {
+                const colorClass = PHASE_COLOR_CLASS[p] || 'text-white';
+                const weightClass = (p === currentSubPhase) ? 'font-extrabold' : 'font-normal';
+                const label = SHORT_PHASE_LABEL[p] || p.split(' ')[0];
+                // small responsive sizes
+                return `<span class="${colorClass} ${weightClass} text-lg sm:text-2xl mx-2">${label}</span>`;
+            }).join('');
+        };
+
+        const hidePhaseLabels = () => { if (phaseLabels) phaseLabels.innerHTML = ''; };
+
 
         /**
          * Calculates the total session duration from the rep duration.
@@ -819,6 +850,9 @@
             // Enforce a large, prominent style for the success message
             statusText.classList.add('text-5xl', 'font-extrabold', 'h-14');
 
+            // Hide the phase labels when finished
+            hidePhaseLabels();
+
             // Hide the round timer display for a cleaner success screen
             // (timerContainer references the inner circle element used for the large timer)
             if (timerContainer) {
@@ -981,6 +1015,7 @@
                             const completedSet = repCount / 5; 
                             const breakMessage = `Long Rest (Set ${completedSet} Complete)`; 
                             setStatusText(breakMessage, currentState);
+                            hidePhaseLabels();
                             updateUI(currentState, PHASE_DURATIONS_MS[currentState] / 1000); 
                             requestAnimationFrame(tick);
                             return;
@@ -993,6 +1028,9 @@
             if (subPhase === SUB_PHASE.EXHALE) { displayText = EXHALE_INSTRUCTIONS; } 
             else if (subPhase === SUB_PHASE.REST) { displayText = currentRestLabel; } 
             else { displayText = SUB_PHASE.INHALE; }
+
+            // Render the colored phase labels with the current subphase bolded
+            renderPhaseLabels(subPhase);
             setStatusText(displayText, subPhase);
         };
 
@@ -1056,6 +1094,7 @@
             pauseResumeButton.classList.remove('bg-red-600', 'hover:bg-red-700');
             pauseResumeButton.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
             setStatusText(PAUSE_INSTRUCTIONS, TIMER_STATE.PAUSED);
+            hidePhaseLabels();
             updateUI(currentState, timeRemainingWhenPaused / 1000);
             
             // Ensure display is static and correct
