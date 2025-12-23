@@ -75,6 +75,19 @@
             will-change: transform, opacity;
             pointer-events: none;
         }
+
+        /* Progress ring styles */
+        /* Ensure strokes use inherited color from Tailwind text-* classes (do not force transparent) */
+        #progress-ring { color: inherit; }
+        #progress-ring .phase-arc { transition: d 220ms linear, stroke 220ms linear; stroke-linecap: round; }
+        #progress-ring .sweep-dot, #progress-ring line { transition: transform 120ms linear, stroke 120ms linear, fill 120ms linear; }
+        #progress-ring .sweep-dot { transform-origin: 50% 50%; }
+        
+        /* Make sure SVG inherits Tailwind color classes (text-*) for stroke via currentColor */
+        #progress-ring svg, #progress-ring * { vector-effect: non-scaling-stroke; }
+        
+        /* Ensure ticks are slightly translucent */
+        #progress-ring #phase-ticks line { opacity: 0.9; }
     </style>
 </head>
 <body class="bg-dark-bg font-sans text-light-text flex items-center justify-center p-4 min-h-screen">
@@ -144,6 +157,21 @@
                 <div id="timer-display-container" class="relative flex items-center justify-center h-40 w-40 sm:h-56 sm:w-56 mx-auto sm:mx-0">
                     <!-- Pulse Ring (only visible when active) -->
                     <div id="pulse-ring" class="absolute h-full w-full rounded-full bg-primary opacity-30 hidden"></div>
+
+                    <!-- Progress Ring SVG (visual progress + arcs + sweep) -->
+                    <svg id="progress-ring" viewBox="0 0 100 100" class="absolute inset-0 w-full h-full pointer-events-none z-20">
+                        <!-- Background faint ring -->
+                        <circle cx="50" cy="50" r="44" class="ring-bg text-gray-600" stroke="currentColor" stroke-width="4" fill="none" />
+                        <!-- Phase arcs will be drawn into this group by JS -->
+                        <g id="phase-arcs"></g>
+                        <!-- Tick marks for subphase boundaries -->
+                        <g id="phase-ticks"></g>
+                        <!-- Sweep indicator group (rotated around center) -->
+                        <g id="sweep-group">
+                            <line x1="50" y1="6" x2="50" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="text-gray-300"/>
+                            <circle cx="50" cy="12" r="2.6" class="sweep-dot text-gray-300" fill="currentColor" />
+                        </g>
+                    </svg>
                     
                     <!-- Main Timer Circle -->
                     <div class="relative flex flex-col items-center justify-center h-full w-full rounded-full bg-gray-800 border-4 border-gray-600 shadow-inner-xl transition-all duration-300">
@@ -400,6 +428,134 @@
         const btnDuration15 = document.getElementById('btn-duration-15');
         const btnDuration30 = document.getElementById('btn-duration-30');
 
+        // --- Progress Ring Initialization & Helpers ---
+        const progressRing = document.getElementById('progress-ring');
+        const phaseArcsGroup = progressRing ? progressRing.querySelector('#phase-arcs') : null;
+        const phaseTicksGroup = progressRing ? progressRing.querySelector('#phase-ticks') : null;
+        const sweepGroup = progressRing ? progressRing.querySelector('#sweep-group') : null;
+
+        const R = 44; // radius used in SVG coordinates
+
+        const polarToCartesian = (cx, cy, radius, angleDeg) => {
+            const angleRad = (angleDeg - 90) * Math.PI / 180.0;
+            return { x: cx + (radius * Math.cos(angleRad)), y: cy + (radius * Math.sin(angleRad)) };
+        };
+
+        const describeArc = (cx, cy, radius, startAngle, endAngle) => {
+            const start = polarToCartesian(cx, cy, radius, endAngle);
+            const end = polarToCartesian(cx, cy, radius, startAngle);
+            const largeArcFlag = (endAngle - startAngle) <= 180 ? '0' : '1';
+            return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`;
+        };
+
+        const clearGroup = (group) => { while (group && group.firstChild) group.removeChild(group.firstChild); };
+
+        const setPhaseArcs = (segments) => {
+            if (!phaseArcsGroup) return;
+            clearGroup(phaseArcsGroup);
+            clearGroup(phaseTicksGroup);
+            const total = segments.reduce((s, seg) => s + seg.ms, 0);
+            let angle = 0;
+            segments.forEach((seg) => {
+                const fraction = (total === 0) ? 0 : seg.ms / total;
+                const sweep = fraction * 360;
+
+                // If this segment covers the full circle, draw a circle element instead of an arc path
+                if (sweep >= 359.999) {
+                    const circ = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circ.setAttribute('cx', '50');
+                    circ.setAttribute('cy', '50');
+                    circ.setAttribute('r', String(R));
+                    circ.setAttribute('stroke', 'currentColor');
+                    circ.setAttribute('stroke-width', '6');
+                    circ.setAttribute('fill', 'none');
+                    circ.classList.add('phase-arc');
+                    if (seg.className) circ.classList.add(seg.className);
+                    phaseArcsGroup.appendChild(circ);
+                } else {
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', describeArc(50, 50, R, angle, angle + sweep));
+                    path.setAttribute('stroke', 'currentColor');
+                    path.setAttribute('stroke-width', '6');
+                    path.setAttribute('fill', 'none');
+                    path.setAttribute('stroke-linecap', 'butt');
+                    path.classList.add('phase-arc');
+                    if (seg.className) path.classList.add(seg.className);
+                    phaseArcsGroup.appendChild(path);
+                }
+
+                // Tick mark at the end of this segment
+                const tickAngle = angle + sweep;
+                const tickStart = polarToCartesian(50, 50, R - 6, tickAngle);
+                const tickEnd = polarToCartesian(50, 50, R - 2, tickAngle);
+                const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                tick.setAttribute('x1', tickStart.x);
+                tick.setAttribute('y1', tickStart.y);
+                tick.setAttribute('x2', tickEnd.x);
+                tick.setAttribute('y2', tickEnd.y);
+                tick.setAttribute('stroke', 'currentColor');
+                tick.setAttribute('stroke-width', '2');
+                if (seg.className) tick.classList.add(seg.className);
+                phaseTicksGroup.appendChild(tick);
+
+                angle += sweep;
+            });
+        };
+
+        const updateSweep = (elapsedMs, durationMs) => {
+            if (!sweepGroup) return;
+            const frac = Math.max(0, Math.min(1, elapsedMs / durationMs));
+            const angle = frac * 360;
+            // Rotate directly so angle=0 is at 12 o'clock (top)
+            sweepGroup.setAttribute('transform', `rotate(${angle} 50 50)`);
+        };
+
+        const setSweepColorClass = (className) => {
+            if (!sweepGroup) return;
+            const elems = sweepGroup.querySelectorAll('line, circle');
+            elems.forEach(el => {
+                // Remove any existing Tailwind text- classes (simple heuristic)
+                el.className.baseVal = el.className.baseVal.split(/\s+/).filter(c => !c.startsWith('text-')).join(' ');
+                if (className) el.classList.add(className);
+            });
+        };
+
+        const updateProgressRing = (state, elapsedMs, durationMs) => {
+            if (!progressRing) return;
+            if (state === TIMER_STATE.ACTIVE_REP) {
+                const inhaleMs = 1000;
+                const exhaleMs = 2000;
+                const restMs = Math.max(0, PHASE_DURATIONS_MS[TIMER_STATE.ACTIVE_REP] - (inhaleMs + exhaleMs));
+                const segments = [
+                    { name: 'inhale', ms: inhaleMs, className: PHASE_COLOR_CLASS[SUB_PHASE.INHALE] },
+                    { name: 'exhale', ms: exhaleMs, className: PHASE_COLOR_CLASS[SUB_PHASE.EXHALE] },
+                    { name: 'rest', ms: restMs, className: PHASE_COLOR_CLASS[SUB_PHASE.REST] },
+                ];
+                setPhaseArcs(segments);
+                updateSweep(elapsedMs, PHASE_DURATIONS_MS[TIMER_STATE.ACTIVE_REP]);
+                // Color the sweep indicator to hint at the upcoming subphase
+                try {
+                    const pos = elapsedMs;
+                    let upcomingClass = null;
+                    if (pos < inhaleMs) upcomingClass = PHASE_COLOR_CLASS[SUB_PHASE.EXHALE];
+                    else if (pos < inhaleMs + exhaleMs) upcomingClass = PHASE_COLOR_CLASS[SUB_PHASE.REST];
+                    else upcomingClass = PHASE_COLOR_CLASS[SUB_PHASE.INHALE];
+                    setSweepColorClass(upcomingClass);
+                } catch (e) { /* ignore */ }
+            } else if (state === TIMER_STATE.LONG_BREAK) {
+                const segments = [{ name: 'long', ms: PHASE_DURATIONS_MS[TIMER_STATE.LONG_BREAK], className: PHASE_COLOR_CLASS[TIMER_STATE.LONG_BREAK] }];
+                setPhaseArcs(segments);
+                updateSweep(elapsedMs, PHASE_DURATIONS_MS[TIMER_STATE.LONG_BREAK]);
+                setSweepColorClass(PHASE_COLOR_CLASS[TIMER_STATE.LONG_BREAK]);
+            } else {
+                // Paused / Idle: faint single ring, sweep at top
+                const segments = [{ name: 'idle', ms: 1, className: 'text-gray-600' }];
+                setPhaseArcs(segments);
+                updateSweep(0, 1);
+                setSweepColorClass('text-gray-600');
+            }
+        };
+
 
         // MODAL ELEMENTS
         const resetModal = document.getElementById('reset-modal');
@@ -582,6 +738,8 @@
             calculateTotalDuration(currentRepDurationMs);
             // Update total time display with new total duration
             totalTimeValue.textContent = formatTime(totalSessionDurationMs);
+            // Refresh the progress ring to reflect the updated per-rep segments
+            try { updateProgressRing(currentState, Date.now() - (phaseStartTime || Date.now()), PHASE_DURATIONS_MS[currentState]); } catch(e) { /* ignore if not initialized */ }
         };
         
         const initAudio = () => {
@@ -849,6 +1007,8 @@
             else {
                 updateUI(currentState, remaining / 1000);
                 if (currentState === TIMER_STATE.ACTIVE_REP) { updateActiveRepStatus(elapsed); }
+                // Update the visual progress ring and sweep indicator
+                updateProgressRing(currentState, elapsed, duration);
             }
             
             // --- Corrected Total Time Calculation ---
@@ -958,7 +1118,9 @@
         window.handleRestDurationChange('15'); 
         setStatusText(INITIAL_INSTRUCTIONS, TIMER_STATE.IDLE);
         updateUI(TIMER_STATE.IDLE, 0);
-        updateSetBoxes(); 
+        updateSetBoxes();
+        // Initialize visual ring to idle state
+        updateProgressRing(TIMER_STATE.IDLE, 0, 1); 
     </script>
 </body>
 </html>
