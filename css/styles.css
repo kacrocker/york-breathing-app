@@ -1,0 +1,111 @@
+/**
+ * York Breathing Exercise Timer - Main Stylesheet
+ * 
+ * This file contains custom styles for the EMST 150 Trainer app.
+ * Note: This app uses Tailwind CSS for utility classes (loaded via CDN in index.html).
+ * This file contains only custom animations and styles that cannot be achieved
+ * with Tailwind utility classes.
+ * 
+ * For beginners:
+ * - @import loads the Inter font from Google Fonts
+ * - @keyframes define animations used by JavaScript to add visual effects
+ * - The .confetti class styles particles for the celebration effect
+ */
+
+/* ============================================================
+   FONT IMPORTS
+   ============================================================ */
+/* Import Inter font with multiple weights for typography variety */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+/* ============================================================
+   CUSTOM ANIMATIONS
+   ============================================================ */
+
+/**
+ * Timer Ring Pulse Animation
+ * 
+ * Creates a pulsing ring effect around the timer circle during active phases.
+ * The ring expands from 30% to 150% of its size while fading out.
+ * 
+ * Usage: Applied via the .timer-ring-active class (toggled by JavaScript)
+ */
+@keyframes pulse-ring {
+    0% {
+        transform: scale(0.3);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/**
+ * Active state for the timer's pulse ring
+ * Creates a subtle glowing effect during inhale/exhale phases
+ */
+.timer-ring-active {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/**
+ * Confetti Fall Animation
+ * 
+ * Makes confetti particles fall from above the viewport to below,
+ * while rotating 720 degrees (two full rotations).
+ * 
+ * Used by: showCelebration() function in app.js
+ * Note: Each particle gets randomized duration and delay via JavaScript
+ */
+@keyframes confetti-fall {
+    0% { 
+        transform: translateY(-100vh) rotate(0deg); 
+        opacity: 1; 
+    }
+    100% { 
+        transform: translateY(100vh) rotate(720deg); 
+        opacity: 0; 
+    }
+}
+
+/* ============================================================
+   CONFETTI STYLES
+   ============================================================ */
+
+/**
+ * Confetti Particle Base Style
+ * 
+ * Each confetti particle is a small colored circle that falls from the top
+ * of the screen. JavaScript dynamically sets:
+ * - left position (random horizontal placement)
+ * - background color (from CONFETTI_COLORS array)
+ * - width/height (random size)
+ * - animation-duration (random fall speed)
+ * - animation-delay (staggered start times)
+ * 
+ * Tips for customization:
+ * - Change base width/height for larger/smaller particles
+ * - Modify border-radius for different shapes (e.g., 0 for squares)
+ * - Adjust animation-timing-function for different fall patterns
+ */
+.confetti {
+    position: absolute;
+    /* Start above the viewport so translateY animation clearly moves particles into view */
+    top: -10vh;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    opacity: 0;
+    /* Use the confetti-fall keyframes, run each particle once, and keep final state until removed */
+    animation-name: confetti-fall;
+    animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+    z-index: 1000;
+    /* Performance optimization: hint to browser about animated properties */
+    will-change: transform, opacity;
+    /* Prevent confetti from blocking clicks */
+    pointer-events: none;
+}
