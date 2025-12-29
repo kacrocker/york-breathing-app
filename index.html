@@ -817,7 +817,7 @@
         let lastPlayedSubPhase = null;
         const playTransitionChime = (subPhase) => {
              if (lastPlayedSubPhase === subPhase) return;
-             if (subPhase === SUB_PHASE.INHALE || subPhase === SUB_PHASE.REST) { playTone(440, 0.1); }
+             if (subPhase === SUB_PHASE.INHALE) { playTone(440, 0.1); }
              if (subPhase === SUB_PHASE.EXHALE) { playTone(880, 0.2); }
              lastPlayedSubPhase = subPhase;
         };
