@@ -983,6 +983,8 @@ const updateActiveRepStatus = (elapsedMs) => {
         displayText = SUB_PHASE.INHALE;
     }
     setStatusText(displayText, subPhase);
+    // Render the colored phase labels with the current subphase bolded
+    renderPhaseLabels(subPhase);
 };
 
 /**
